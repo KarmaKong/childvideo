@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: theme('colors.kid.bg');
+  color: #3a2e28;
+  font-family: theme('fontFamily.round');
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+  user-select: none;
+}
+
+/* Hide native video controls when we render our own overlay */
+video::-webkit-media-controls {
+  display: none !important;
+}
+
+@layer components {
+  .btn-kid {
+    @apply inline-flex items-center justify-center gap-2 rounded-blob bg-kid-primary px-6 py-3
+           text-lg font-bold text-white shadow-lg active:scale-95 transition-transform;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-blob bg-white px-5 py-3
+           text-lg font-bold text-kid-primary shadow active:scale-95 transition-transform;
+  }
+}

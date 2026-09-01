@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "categories": [
+    { "id": "nursery", "name": "儿歌", "icon": "🎵", "color": "#ff7a59" },
+    { "id": "cartoon", "name": "动画", "icon": "🐰", "color": "#4dabf7" },
+    { "id": "science", "name": "科普", "icon": "🔬", "color": "#51cf66" },
+    { "id": "story", "name": "故事", "icon": "📖", "color": "#9775fa" }
+  ],
+  "videos": [
+    {
+      "id": "bunny1",
+      "title": "小兔子的一天 第1集",
+      "category": "cartoon",
+      "src": "media/bunny1.mp4",
+      "duration": 8,
+      "series": "bunny",
+      "episode": 1,
+      "minAge": 3
+    },
+    {
+      "id": "bunny2",
+      "title": "小兔子的一天 第2集",
+      "category": "cartoon",
+      "src": "media/bunny2.mp4",
+      "duration": 8,
+      "series": "bunny",
+      "episode": 2,
+      "minAge": 3
+    },
+    {
+      "id": "song1",
+      "title": "一起唱：小星星",
+      "category": "nursery",
+      "src": "media/song1.mp4",
+      "duration": 6,
+      "minAge": 2
+    },
+    {
+      "id": "sci1",
+      "title": "雨是怎么来的？",
+      "category": "science",
+      "src": "media/sci1.mp4",
+      "duration": 7,
+      "minAge": 5
+    },
+    {
+      "id": "bunny-movie",
+      "title": "大兔子邦尼（示例·需联网）",
+      "category": "story",
+      "src": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+      "duration": 596,
+      "minAge": 4
+    },
+    {
+      "id": "sintel",
+      "title": "辛特尔与小龙（示例·需联网）",
+      "category": "story",
+      "src": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
+      "duration": 888,
+      "minAge": 6
+    }
+  ]
+}
