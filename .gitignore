@@ -12,3 +12,8 @@ vite.config.d.ts
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# 自建部署运行时数据
+deploy/media/
+deploy/jellyfin/
+tools/ingest/.ingestrc.json

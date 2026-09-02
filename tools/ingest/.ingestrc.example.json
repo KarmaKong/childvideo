@@ -1,0 +1,5 @@
+{
+  "JELLYFIN_URL": "http://localhost:8096",
+  "JELLYFIN_TOKEN": "",
+  "MEDIA_ROOT": "../../deploy/media"
+}

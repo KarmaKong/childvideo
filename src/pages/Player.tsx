@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { assetUrl } from '../config'
+import { getSource } from '../lib/source'
 import { findVideo, nextInSeries, useCatalog } from '../lib/catalog'
 import { placeholderPoster } from '../lib/poster'
 import { checkPlaybackAllowed, type BlockReason } from '../lib/guard'
@@ -42,8 +42,27 @@ export default function Player() {
 
   const lastTick = useRef<number | null>(null)
   const uiTimer = useRef<number | undefined>(undefined)
+  const serverResume = useRef<number | null>(null)
+  const lastReport = useRef(0)
 
-  const src = useMemo(() => (video ? assetUrl(video.src) : ''), [video])
+  const pb = useMemo(() => (video ? getSource().resolvePlayback(video) : null), [video])
+  const src = pb?.src ?? ''
+
+  // 服务端续播位置（Jellyfin 多设备同步；静态源为 no-op）
+  useEffect(() => {
+    serverResume.current = null
+    if (!video) return
+    let alive = true
+    getSource()
+      .getResumePosition?.(video)
+      .then((sec) => {
+        if (alive) serverResume.current = sec
+      })
+      .catch(() => {})
+    return () => {
+      alive = false
+    }
+  }, [video])
 
   // ---- 加载源（含 HLS） ----
   useEffect(() => {
@@ -54,7 +73,7 @@ export default function Player() {
     setDur(0)
 
     let hls: { destroy: () => void } | null = null
-    const isHls = video.kind === 'hls'
+    const isHls = pb?.kind === 'hls'
     const nativeHls = el.canPlayType('application/vnd.apple.mpegurl')
 
     if (isHls && !nativeHls) {
@@ -74,7 +93,7 @@ export default function Player() {
     return () => {
       hls?.destroy()
     }
-  }, [src, video])
+  }, [src, video, pb])
 
   // ---- 播放守卫：就寝/时长限制 ----
   const runGuard = useCallback(() => {
@@ -97,18 +116,21 @@ export default function Player() {
 
     const onLoaded = () => {
       setDur(el.duration || 0)
-      if (savedPos > 3 && savedPos < (el.duration || Infinity) - 10) {
-        el.currentTime = savedPos
+      const resumeAt = Math.max(savedPos, serverResume.current ?? 0)
+      if (resumeAt > 3 && resumeAt < (el.duration || Infinity) - 10) {
+        el.currentTime = resumeAt
       }
     }
     const onPlay = () => {
       if (runGuard().blocked) return
       setPlaying(true)
       lastTick.current = el.currentTime
+      if (video) getSource().reportStart?.(video, el.currentTime)
     }
     const onPause = () => {
       setPlaying(false)
       flush(el)
+      if (video) getSource().reportProgress?.(video, el.currentTime, true)
     }
     const onTime = () => {
       setCur(el.currentTime)
@@ -118,6 +140,12 @@ export default function Player() {
         if (d > 0 && d < 2) accWatched(d)
       }
       lastTick.current = el.currentTime
+      // 每 ~10s 向服务端上报一次续播位置
+      const now = Date.now()
+      if (video && now - lastReport.current > 10_000) {
+        lastReport.current = now
+        getSource().reportProgress?.(video, el.currentTime, el.paused)
+      }
     }
     const onEnded = () => {
       setPlaying(false)
@@ -167,6 +195,7 @@ export default function Player() {
         position: done ? 0 : el.currentTime,
         duration: el.duration,
       })
+      getSource().reportStop?.(video, done ? el.duration : el.currentTime)
     }
   }
 
@@ -230,7 +259,7 @@ export default function Player() {
       </div>
     )
 
-  const poster = video?.poster ? assetUrl(video.poster) : video ? placeholderPoster(video.title) : ''
+  const poster = video ? (getSource().resolvePoster(video) ?? placeholderPoster(video.title)) : ''
 
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-black">

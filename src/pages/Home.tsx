@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useCatalog } from '../lib/catalog'
+import { SOURCE_MODE } from '../lib/source'
 import Row from '../components/Row'
 import VideoCard from '../components/VideoCard'
 import { isCategoryAllowed, useSettingsStore } from '../store/useSettingsStore'
@@ -18,7 +19,9 @@ export default function Home() {
         {error}
         <br />
         <span className="text-sm font-normal text-gray-500">
-          请检查 VITE_CDN_BASE 配置或 catalog.json 是否可访问
+          {SOURCE_MODE === 'jellyfin'
+            ? '请检查 VITE_JELLYFIN_* 配置，以及 Jellyfin 是否可访问'
+            : '请检查 VITE_CDN_BASE 配置或 catalog.json 是否可访问'}
         </span>
       </p>
     )

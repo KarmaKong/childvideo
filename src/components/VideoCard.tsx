@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { Video } from '../types'
-import { assetUrl } from '../config'
+import { getSource } from '../lib/source'
 import { placeholderPoster } from '../lib/poster'
 import { useProgressStore } from '../store/useProgressStore'
 
@@ -13,7 +13,7 @@ function fmtDur(sec?: number): string | null {
 
 export default function VideoCard({ video }: { video: Video }) {
   const entry = useProgressStore((st) => st.progress[video.id])
-  const poster = video.poster ? assetUrl(video.poster) : placeholderPoster(video.title)
+  const poster = getSource().resolvePoster(video) ?? placeholderPoster(video.title)
   const dur = fmtDur(video.duration)
   const pct =
     entry && entry.duration > 0 ? Math.min(100, (entry.position / entry.duration) * 100) : 0

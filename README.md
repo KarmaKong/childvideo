@@ -1,7 +1,14 @@
 # 小小影院 · 儿童视频播放器
 
-面向儿童的 Web 视频播放器，预置精选片库，视频与封面托管在**国内可用的对象存储 / CDN**
-（阿里云 OSS、腾讯云 COS、七牛云均可，不绑定厂商）。
+面向儿童的 Web 视频播放器，预置精选片库。两种数据源，切 `.env` 里的 `VITE_SOURCE` 即可，
+页面代码不变：
+
+| `VITE_SOURCE` | 片库与存储 | 进度同步 | 适合 |
+|---|---|---|---|
+| `static`（默认） | `catalog.json` + 对象存储 / CDN（阿里云 OSS、腾讯云 COS、七牛，不绑定厂商） | 浏览器本地 | 纯静态托管、零后端 |
+| `jellyfin` | 自建 Jellyfin 的「儿童」媒体库 | 回写 Jellyfin，多设备继续看 | 有一台国内服务器 / NAS，见 [`deploy/`](deploy/) |
+
+数据源抽象在 [`src/lib/source/`](src/lib/source/)：`CatalogSource` 接口 + `StaticSource` / `JellyfinSource` 两实现。
 
 ## 特性
 
@@ -27,11 +34,12 @@ npm run dev
 
 `public/media/*.mp4` 为 ffmpeg 生成的占位测试片，仅供本地预览，请替换为真实内容。
 
-## 配置对象存储 / CDN
+## 方案 A：static 源（对象存储 / CDN）
 
 复制 `.env.example` 为 `.env` 并填写：
 
 ```
+VITE_SOURCE=static
 VITE_CDN_BASE=https://cdn.example.com/childvideo   # 资源根地址，末尾不要带斜杠
 VITE_CATALOG_PATH=catalog.json                     # 片库目录文件名（可选）
 VITE_PUBLIC_BASE=/                                  # 部署到子路径时改，如 /childvideo/
@@ -99,9 +107,35 @@ ossutil cp -r media/ oss://your-bucket/childvideo/media/ --update
 腾讯云 COS 用 `coscmd`，七牛用 `qshell`，命令类似。建议为存储桶挂 CDN 域名并开启
 视频防盗链 / Range 回源。
 
-## 后续（v2 建议）
+## 方案 B：jellyfin 源（自建媒体服务器）
 
-- 家长账号 + 多设备同步（LeanCloud 国内版 / 自建 Node + MySQL）
+Jellyfin 管存储 / 转码 / 封面刮削 / 进度同步，nginx 同源反代绕开 CORS，前端只是静态包。
+家长控制（时长上限、就寝锁定、分类白名单、按年龄过滤）仍在前端。
+
+- 一键起服务、Jellyfin 首次设置、`.env` 填法：见 [`deploy/README.md`](deploy/README.md)
+- 往库里加内容（yt-dlp / 本地文件 → ffmpeg → 落库 → 触发扫描）：见 [`tools/ingest/README.md`](tools/ingest/README.md)
+
+```
+浏览器 ─► nginx ─┬─ /       → 儿童前端 dist/
+                 └─ /jf/*   → Jellyfin
+```
+
+`.env` 关键项：
+
+```
+VITE_SOURCE=jellyfin
+VITE_JELLYFIN_BASE=/jf
+VITE_JELLYFIN_KEY=...
+VITE_JELLYFIN_USER_ID=...
+VITE_JELLYFIN_CATEGORY_MODE=genre     # 用视频的 Genre 当分类；入库 CLI 会写好
+VITE_JELLYFIN_STREAM=direct           # 直连播放；hls 则让 Jellyfin 转码
+```
+
+本地对接远端 Jellyfin 开发时，设 `VITE_JELLYFIN_ORIGIN=http://host:8096`，dev server 会把 `/jf` 代理过去。
+
+## 后续（v3 建议）
+
+- 家长设置也上云（Jellyfin 自定义 DisplayPreferences 或独立小服务），换设备同步限额
 - 视频转码为 HLS 多码率，弱网自适应
 - Service Worker 缓存「最近观看」离线可看
 - 内容审核后台，上架/下架精选片

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { CATALOG_URL } from '../config'
 import type { Catalog, Video } from '../types'
+import { getSource } from './source'
 
 let cache: Catalog | null = null
 let inflight: Promise<Catalog> | null = null
@@ -8,29 +8,16 @@ let inflight: Promise<Catalog> | null = null
 export async function loadCatalog(): Promise<Catalog> {
   if (cache) return cache
   if (inflight) return inflight
-  inflight = fetch(CATALOG_URL, { cache: 'no-cache' })
-    .then((r) => {
-      if (!r.ok) throw new Error(`加载片库失败 (${r.status})`)
-      return r.json() as Promise<Catalog>
-    })
+  inflight = getSource()
+    .loadCatalog()
     .then((data) => {
-      cache = normalize(data)
-      return cache
+      cache = data
+      return data
     })
     .finally(() => {
       inflight = null
     })
   return inflight
-}
-
-function normalize(data: Catalog): Catalog {
-  return {
-    ...data,
-    videos: data.videos.map((v) => ({
-      ...v,
-      kind: v.kind ?? (/\.m3u8($|\?)/i.test(v.src) ? 'hls' : 'mp4'),
-    })),
-  }
 }
 
 export function useCatalog() {
