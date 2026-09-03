@@ -3,6 +3,8 @@ import type { Catalog, Video } from '../../types'
 export interface Playback {
   src: string
   kind: 'mp4' | 'hls'
+  /** 直连播放失败时的备选地址（一般是让服务端转码的 HLS） */
+  fallback?: { src: string; kind: 'mp4' | 'hls' }
 }
 
 /**

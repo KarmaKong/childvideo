@@ -12,7 +12,7 @@ export interface RuntimeConfig {
     key?: string
     userId?: string
     libraryId?: string
-    categoryMode?: 'genre' | 'collection'
+    categoryMode?: 'genre' | 'collection' | 'folder'
     stream?: 'direct' | 'hls'
   }
 }

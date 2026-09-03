@@ -170,6 +170,16 @@ curl -s -o /dev/null -w "proxy=%{http_code}\n" http://localhost:8080/jf/System/I
 
 浏览器开 `http://<HOST_IP>:8080/`：应出现儿童首页。库里还没视频时首页提示为空，正常。
 
+**分类**：
+- 视频文件按文件夹分好（`<库根>/Numberblocks/...`、`<库根>/儿歌/...`）→ 用
+  `"categoryMode": "folder"`，前端按顶层子文件夹名分行，不用写 NFO。
+- 全堆在库根、没分文件夹 → 只会有一个「精选」分类（功能正常，只是不分行）。
+- 已经用 `tools/ingest` 入库、写了 NFO `<genre>` → 用 `"categoryMode": "genre"`。
+
+**放不出画面 / 黑屏**：多为原文件是 mkv / HEVC / AC3，浏览器直连放不了。`direct` 模式会
+自动回退到转码；若整体都不行，把 `"stream"` 改成 `"hls"`（一律让 NAS 转码，CPU 弱时单路也够），
+`docker compose restart web`。
+
 ---
 
 ## 6. 加内容

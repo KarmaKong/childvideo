@@ -13,7 +13,7 @@ interface ImportMetaEnv {
   readonly VITE_JELLYFIN_KEY?: string
   readonly VITE_JELLYFIN_USER_ID?: string
   readonly VITE_JELLYFIN_LIBRARY_ID?: string
-  readonly VITE_JELLYFIN_CATEGORY_MODE?: 'genre' | 'collection'
+  readonly VITE_JELLYFIN_CATEGORY_MODE?: 'genre' | 'collection' | 'folder'
   readonly VITE_JELLYFIN_STREAM?: 'direct' | 'hls'
   readonly VITE_JELLYFIN_ORIGIN?: string
 }

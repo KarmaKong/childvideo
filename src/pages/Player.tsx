@@ -64,33 +64,59 @@ export default function Player() {
     }
   }, [video])
 
-  // ---- 加载源（含 HLS） ----
+  // ---- 加载源（含 HLS + 直连失败自动回退转码） ----
   useEffect(() => {
     const el = videoRef.current
-    if (!el || !video) return
+    if (!el || !video || !pb) return
     setEnded(false)
     setCur(0)
     setDur(0)
 
     let hls: { destroy: () => void } | null = null
-    const isHls = pb?.kind === 'hls'
-    const nativeHls = el.canPlayType('application/vnd.apple.mpegurl')
+    let triedFallback = false
 
-    if (isHls && !nativeHls) {
-      import('hls.js').then(({ default: Hls }) => {
-        if (Hls.isSupported()) {
-          const h = new Hls({ maxBufferLength: 30 })
-          h.loadSource(src)
-          h.attachMedia(el)
-          hls = h
-        } else {
-          el.src = src
-        }
-      })
-    } else {
-      el.src = src
+    const attach = (url: string, isHls: boolean) => {
+      hls?.destroy()
+      hls = null
+      const nativeHls = el.canPlayType('application/vnd.apple.mpegurl')
+      if (isHls && !nativeHls) {
+        import('hls.js').then(({ default: Hls }) => {
+          if (Hls.isSupported()) {
+            const h = new Hls({ maxBufferLength: 30 })
+            h.loadSource(url)
+            h.attachMedia(el)
+            hls = h
+          } else {
+            el.src = url
+          }
+        })
+      } else {
+        el.src = url
+        el.load()
+      }
     }
+
+    const onError = () => {
+      if (!triedFallback && pb.fallback) {
+        triedFallback = true
+        const at = el.currentTime
+        attach(pb.fallback.src, pb.fallback.kind === 'hls')
+        el.addEventListener(
+          'loadedmetadata',
+          () => {
+            if (at > 1) el.currentTime = at
+            el.play().catch(() => {})
+          },
+          { once: true },
+        )
+      }
+    }
+    el.addEventListener('error', onError)
+
+    attach(pb.src, pb.kind === 'hls')
+
     return () => {
+      el.removeEventListener('error', onError)
       hls?.destroy()
     }
   }, [src, video, pb])

@@ -3,28 +3,30 @@ import type { Catalog, Category, Video } from '../../types'
 import type { CatalogSource, Playback } from './types'
 
 // ---- 配置：优先 config.json 的 jellyfin.*，回退 import.meta.env.VITE_JELLYFIN_* ----
+type CategoryMode = 'genre' | 'collection' | 'folder'
+type StreamMode = 'direct' | 'hls'
+
 interface JfCfg {
   base: string
   key: string
   userId: string
   libraryId: string
-  categoryMode: 'genre' | 'collection'
-  stream: 'direct' | 'hls'
+  categoryMode: CategoryMode
+  stream: StreamMode
 }
 
 function jf(): JfCfg {
   const rc = runtimeConfig().jellyfin ?? {}
   const pick = (a: string | undefined, b: string | undefined) => (a ?? b ?? '').trim()
+  const cm = pick(rc.categoryMode, import.meta.env.VITE_JELLYFIN_CATEGORY_MODE) || 'genre'
+  const sm = pick(rc.stream, import.meta.env.VITE_JELLYFIN_STREAM) || 'direct'
   return {
     base: pick(rc.base, import.meta.env.VITE_JELLYFIN_BASE).replace(/\/+$/, ''),
     key: pick(rc.key, import.meta.env.VITE_JELLYFIN_KEY),
     userId: pick(rc.userId, import.meta.env.VITE_JELLYFIN_USER_ID),
     libraryId: pick(rc.libraryId, import.meta.env.VITE_JELLYFIN_LIBRARY_ID),
-    categoryMode: (pick(rc.categoryMode, import.meta.env.VITE_JELLYFIN_CATEGORY_MODE) ||
-      'genre') as 'genre' | 'collection',
-    stream: (pick(rc.stream, import.meta.env.VITE_JELLYFIN_STREAM) || 'direct') as
-      | 'direct'
-      | 'hls',
+    categoryMode: (['genre', 'collection', 'folder'].includes(cm) ? cm : 'genre') as CategoryMode,
+    stream: (sm === 'hls' ? 'hls' : 'direct') as StreamMode,
   }
 }
 
@@ -97,6 +99,7 @@ interface JfItem {
   IndexNumber?: number
   RunTimeTicks?: number
   OfficialRating?: string
+  Path?: string
   ImageTags?: { Primary?: string }
   UserData?: { PlaybackPositionTicks?: number; PlayedPercentage?: number }
 }
@@ -130,8 +133,29 @@ function deriveSeries(title: string): { series?: string; episode?: number } {
   return { series, episode: ep }
 }
 
+/**
+ * folder 模式：用视频文件所在的「顶层子文件夹名」当分类。
+ * 例：库根 /media，文件 /media/Numberblocks/S1/ep1.mp4 -> 分类 "Numberblocks"。
+ * 直接放在库根下的文件 -> "精选"。
+ */
+function folderCategory(path: string | undefined, roots: string[]): string {
+  if (!path) return '精选'
+  const norm = (s: string) => s.replace(/\\/g, '/').replace(/\/+$/, '')
+  const p = norm(path)
+  for (const r of roots.map(norm).sort((a, b) => b.length - a.length)) {
+    if (r && (p === r || p.startsWith(r + '/'))) {
+      const rest = p.slice(r.length + 1)
+      const seg = rest.split('/')[0]
+      return rest.includes('/') && seg ? seg : '精选'
+    }
+  }
+  // 没匹配到库根：退化用文件的父目录名
+  const parts = p.split('/')
+  return parts.length >= 2 ? parts[parts.length - 2] : '精选'
+}
+
 const FIELDS =
-  'Genres,SeriesName,IndexNumber,ParentIndexNumber,RunTimeTicks,OfficialRating,Overview'
+  'Genres,SeriesName,IndexNumber,ParentIndexNumber,RunTimeTicks,OfficialRating,Overview,Path'
 
 export class JellyfinSource implements CatalogSource {
   private meta = new Map<string, Meta>()
@@ -142,6 +166,16 @@ export class JellyfinSource implements CatalogSource {
     if (c.libraryId) return [c.libraryId]
     const views = await getJson<{ Items: JfView[] }>(`/Users/${c.userId}/Views`)
     return views.Items.map((v) => v.Id)
+  }
+
+  /** 所有媒体库在磁盘上的根路径（folder 分类模式用）；拿不到就返回 [] */
+  private async libraryRoots(): Promise<string[]> {
+    try {
+      const vfs = await getJson<Array<{ Locations?: string[] }>>('/Library/VirtualFolders')
+      return vfs.flatMap((v) => v.Locations ?? [])
+    } catch {
+      return []
+    }
   }
 
   private mapItem(it: JfItem, category: string): Video {
@@ -207,6 +241,19 @@ export class JellyfinSource implements CatalogSource {
           videos.push(this.mapItem(it, '精选'))
         }
       }
+    } else if (c.categoryMode === 'folder') {
+      // 分类 = 视频文件的顶层子文件夹名（适合「整夹丢进去、没 NFO」的情况）
+      const roots = await this.libraryRoots()
+      for (const pid of parents) {
+        const resp = await getJson<JfItemsResp>(
+          `/Users/${c.userId}/Items?ParentId=${pid}&Recursive=true&IncludeItemTypes=Movie,Episode,Video&Fields=${FIELDS}&SortBy=SortName&SortOrder=Ascending&ImageTypeLimit=1&EnableImageTypes=Primary`,
+        )
+        for (const it of resp.Items) {
+          const cat = folderCategory(it.Path, roots)
+          addCat(cat)
+          videos.push(this.mapItem(it, cat))
+        }
+      }
     } else {
       // 分类 = 第一个 Genre（入库 CLI 会写成分类名）；无 Genre 归入「精选」
       for (const pid of parents) {
@@ -233,6 +280,20 @@ export class JellyfinSource implements CatalogSource {
     return { version: 1, categories, videos }
   }
 
+  private hlsUrl(video: Video): string {
+    const q = new URLSearchParams({
+      api_key: jf().key,
+      MediaSourceId: video.id,
+      DeviceId: deviceId(),
+      PlaySessionId: this.session?.playSessionId ?? `${deviceId()}-${Date.now()}`,
+      VideoCodec: 'h264',
+      AudioCodec: 'aac',
+      TranscodingContainer: 'ts',
+      TranscodingProtocol: 'hls',
+    })
+    return api(`/Videos/${video.id}/master.m3u8?${q}`)
+  }
+
   resolvePlayback(video: Video): Playback {
     const c = jf()
     this.session = {
@@ -240,24 +301,19 @@ export class JellyfinSource implements CatalogSource {
       playSessionId: `${deviceId()}-${Date.now()}`,
     }
     if (c.stream === 'hls') {
-      const q = new URLSearchParams({
-        api_key: c.key,
-        MediaSourceId: video.id,
-        DeviceId: deviceId(),
-        PlaySessionId: this.session.playSessionId,
-        VideoCodec: 'h264',
-        AudioCodec: 'aac',
-        TranscodingContainer: 'ts',
-        TranscodingProtocol: 'hls',
-      })
-      return { src: api(`/Videos/${video.id}/master.m3u8?${q}`), kind: 'hls' }
+      return { src: this.hlsUrl(video), kind: 'hls' }
     }
+    // direct：直连原文件；浏览器放不了的（mkv / hevc / ac3…）自动回退到转码 HLS
     const q = new URLSearchParams({
       api_key: c.key,
       static: 'true',
       MediaSourceId: video.id,
     })
-    return { src: api(`/Videos/${video.id}/stream?${q}`), kind: 'mp4' }
+    return {
+      src: api(`/Videos/${video.id}/stream?${q}`),
+      kind: 'mp4',
+      fallback: { src: this.hlsUrl(video), kind: 'hls' },
+    }
   }
 
   resolvePoster(video: Video): string | null {

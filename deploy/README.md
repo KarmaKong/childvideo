@@ -146,8 +146,8 @@ node ingest.mjs add ./local.mp4 -c 儿歌 --copy
 | `jellyfin.key` | API Key |
 | `jellyfin.userId` | kid 用户 ID |
 | `jellyfin.libraryId` | 只读某个库；留空读 kid 能看到的全部 |
-| `jellyfin.categoryMode` | `genre`（默认）/ `collection` |
-| `jellyfin.stream` | `direct`（默认，直连）/ `hls`（让 Jellyfin 转码） |
+| `jellyfin.categoryMode` | `genre`（默认，用 Genre/NFO）/ `folder`（用顶层子文件夹名，适合整夹丢进去没 NFO）/ `collection`（用合集） |
+| `jellyfin.stream` | `direct`（默认，直连原文件，浏览器放不了的自动回退转码 HLS）/ `hls`（一律让 Jellyfin 转码） |
 
 改 `config.json` 后 `docker compose restart web` 生效。**不需要重新构建 `dist/`。**
 
