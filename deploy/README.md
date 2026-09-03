@@ -33,7 +33,7 @@ deploy/
 
 ## 场景 B：NAS 上还没有 Jellyfin —— 一起起（推荐，全在 NAS）
 
-> agent 执行版见 [HANDOFF.md](HANDOFF.md)。
+> 交给 agent 执行的完整手册见 [RUNBOOK.md](RUNBOOK.md)。
 
 ### 1. 仓库放到 NAS
 
