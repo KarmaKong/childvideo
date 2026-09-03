@@ -1,14 +1,17 @@
-import { Link, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useCatalog } from '../lib/catalog'
-import VideoCard from '../components/VideoCard'
+import Grid from '../components/Grid'
 import { isCategoryAllowed, useSettingsStore } from '../store/useSettingsStore'
+import { ChevLeft } from '../components/icons'
 
 export default function CategoryPage() {
   const { categoryId = '' } = useParams()
+  const nav = useNavigate()
   const { catalog } = useCatalog()
   const settings = useSettingsStore()
 
-  if (!catalog) return <p className="p-10 text-center text-gray-400">加载中…</p>
+  if (!catalog)
+    return <p className="p-16 text-center text-lg font-black text-ink/40">加载中…</p>
 
   const cat = catalog.categories.find((c) => c.id === categoryId)
   const allowed = isCategoryAllowed(settings, categoryId)
@@ -19,28 +22,26 @@ export default function CategoryPage() {
   )
 
   return (
-    <div className="p-4">
-      <div className="mb-4 flex items-center gap-2">
-        <Link to="/" className="btn-ghost !px-3 !py-2 text-base">
-          ‹ 返回
-        </Link>
-        <h1 className="text-2xl font-extrabold">
+    <div className="pb-12">
+      <div className="flex items-center gap-3 px-4 py-4">
+        <button
+          onClick={() => nav('/')}
+          className="btn-round h-12 w-12"
+          aria-label="返回"
+        >
+          <ChevLeft className="h-6 w-6" />
+        </button>
+        <h1 className="text-2xl font-black">
           {cat?.icon} {cat?.name ?? '分类'}
         </h1>
       </div>
 
       {!allowed ? (
-        <p className="p-10 text-center text-gray-500">该分类已被家长隐藏。</p>
+        <p className="p-16 text-center font-black text-ink/40">这个分类被藏起来啦</p>
       ) : vids.length === 0 ? (
-        <p className="p-10 text-center text-gray-500">这个分类还没有视频。</p>
+        <p className="p-16 text-center font-black text-ink/40">这里还没有视频</p>
       ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-          {vids.map((v) => (
-            <div key={v.id} className="flex justify-center">
-              <VideoCard video={v} />
-            </div>
-          ))}
-        </div>
+        <Grid videos={vids} />
       )}
     </div>
   )

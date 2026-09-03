@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { appName } from './config'
 import ParentalGate from './components/ParentalGate'
+import { Parent } from './components/icons'
 import { useSettingsStore } from './store/useSettingsStore'
 import { useProgressStore } from './store/useProgressStore'
 
@@ -18,22 +19,26 @@ export default function App() {
 
   return (
     <div className="mx-auto flex min-h-full max-w-3xl flex-col">
-      <header className="sticky top-0 z-20 flex items-center gap-2 bg-kid-bg/90 px-3 py-3 backdrop-blur">
-        <Link to="/" className="flex shrink-0 items-center gap-1.5 text-lg font-extrabold whitespace-nowrap">
-          <span className="text-2xl">🎬</span>
-          {appName()}
+      <header className="sticky top-0 z-20 flex items-center gap-2 bg-cream/85 px-4 py-3 backdrop-blur">
+        <Link
+          to="/"
+          className="press flex shrink-0 items-center gap-2 whitespace-nowrap text-2xl font-black tracking-tight"
+        >
+          <span className="text-3xl">🐻</span>
+          <span>{appName()}</span>
         </Link>
         <div className="ml-auto flex items-center gap-2">
           {dailyLimitMin > 0 && Number.isFinite(remaining) && (
-            <span className="whitespace-nowrap rounded-full bg-white px-2.5 py-1 text-xs font-bold text-kid-primary shadow sm:text-sm">
-              还可看 {Math.ceil(remaining)} 分钟
+            <span className="whitespace-nowrap rounded-pill bg-white px-3 py-1.5 text-xs font-extrabold tabular-nums text-candy-coral shadow-toysm sm:text-sm">
+              还能看 {Math.ceil(remaining)} 分钟
             </span>
           )}
           <button
-            className="shrink-0 whitespace-nowrap rounded-full bg-white px-3 py-1.5 text-sm font-bold shadow active:scale-95"
+            aria-label="家长"
+            className="press flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/70 text-ink/45 shadow"
             onClick={() => setGate(true)}
           >
-            👨‍👩‍👧 家长
+            <Parent className="h-5 w-5" />
           </button>
         </div>
       </header>

@@ -1,8 +1,9 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
 import { useCatalog } from '../lib/catalog'
 import { sourceMode } from '../lib/source'
-import Row from '../components/Row'
-import VideoCard from '../components/VideoCard'
+import Grid from '../components/Grid'
+import Tile from '../components/Tile'
+import CategoryBubble from '../components/CategoryBubble'
 import { isCategoryAllowed, useSettingsStore } from '../store/useSettingsStore'
 import { useProgressStore } from '../store/useProgressStore'
 import type { Video } from '../types'
@@ -12,83 +13,106 @@ export default function Home() {
   const settings = useSettingsStore()
   const history = useProgressStore((s) => s.history)
   const favorites = useProgressStore((s) => s.favorites)
+  const [filter, setFilter] = useState<string>('all')
 
-  if (error)
-    return (
-      <p className="p-6 text-center text-lg font-bold text-kid-primary">
-        {error}
-        <br />
-        <span className="text-sm font-normal text-gray-500">
-          {sourceMode() === 'jellyfin'
-            ? '请检查 VITE_JELLYFIN_* 配置，以及 Jellyfin 是否可访问'
-            : '请检查 VITE_CDN_BASE 配置或 catalog.json 是否可访问'}
-        </span>
-      </p>
-    )
-  if (!catalog) return <Loading />
+  if (error) return <Splash emoji="🌧️" text={error} sub={hint()} />
+  if (!catalog) return <Splash emoji="🍿" text="正在准备好看的…" bounce />
 
   const visible = (v: Video) =>
     isCategoryAllowed(settings, v.category) &&
     (settings.maxAge === 0 || (v.minAge ?? 0) <= settings.maxAge)
 
+  const all = catalog.videos.filter(visible)
   const byId = new Map(catalog.videos.map((v) => [v.id, v]))
-  const continueList = history.map((id) => byId.get(id)).filter((v): v is Video => !!v && visible(v))
+  const continueList = history
+    .map((id) => byId.get(id))
+    .filter((v): v is Video => !!v && visible(v))
+    .slice(0, 6)
   const favList = favorites.map((id) => byId.get(id)).filter((v): v is Video => !!v && visible(v))
-  const cats = catalog.categories.filter((c) => isCategoryAllowed(settings, c.id))
+  const cats = catalog.categories.filter(
+    (c) => isCategoryAllowed(settings, c.id) && all.some((v) => v.category === c.id),
+  )
+
+  const shown =
+    filter === 'all' ? all : filter === 'fav' ? favList : all.filter((v) => v.category === filter)
 
   return (
-    <div>
-      {continueList.length > 0 && (
-        <Row title="继续观看" icon="⏯️">
-          {continueList.map((v) => (
-            <VideoCard key={v.id} video={v} />
-          ))}
-        </Row>
-      )}
-
-      {favList.length > 0 && (
-        <Row title="我的收藏" icon="⭐">
-          {favList.map((v) => (
-            <VideoCard key={v.id} video={v} />
-          ))}
-        </Row>
-      )}
-
-      {cats.map((cat) => {
-        const vids = catalog.videos.filter((v) => v.category === cat.id && visible(v))
-        if (vids.length === 0) return null
-        return (
-          <Row
-            key={cat.id}
-            title={cat.name}
-            icon={cat.icon}
-            action={
-              <Link to={`/c/${cat.id}`} className="text-sm font-bold text-kid-accent">
-                全部 ›
-              </Link>
-            }
-          >
-            {vids.slice(0, 12).map((v) => (
-              <VideoCard key={v.id} video={v} />
+    <div className="pb-12">
+      {continueList.length > 0 && filter === 'all' && (
+        <section className="pt-3">
+          <h2 className="mb-2 px-4 text-lg font-black text-ink/80">▶ 继续看</h2>
+          <div className="flex gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {continueList.map((v, i) => (
+              <div key={v.id} className="w-44 shrink-0 sm:w-52">
+                <Tile video={v} index={i} />
+              </div>
             ))}
-          </Row>
-        )
-      })}
+          </div>
+        </section>
+      )}
 
-      {cats.length === 0 && (
-        <p className="p-10 text-center text-gray-500">
-          家长已隐藏全部分类，请在「家长」设置中开启。
-        </p>
+      {(cats.length > 0 || favList.length > 0) && (
+        <div className="flex gap-4 overflow-x-auto px-4 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <CategoryBubble
+            icon="🌈"
+            label="全部"
+            color="#FF7A59"
+            active={filter === 'all'}
+            onClick={() => setFilter('all')}
+          />
+          {favList.length > 0 && (
+            <CategoryBubble
+              icon="⭐"
+              label="收藏"
+              color="#FFC23C"
+              active={filter === 'fav'}
+              onClick={() => setFilter('fav')}
+            />
+          )}
+          {cats.map((c) => (
+            <CategoryBubble
+              key={c.id}
+              icon={c.icon}
+              label={c.name}
+              color={c.color || '#3FB9E8'}
+              active={filter === c.id}
+              onClick={() => setFilter(c.id)}
+            />
+          ))}
+        </div>
+      )}
+
+      {shown.length > 0 ? (
+        <Grid videos={shown} />
+      ) : (
+        <Splash emoji="🐣" text={filter === 'fav' ? '还没有收藏' : '这里还没有视频'} />
       )}
     </div>
   )
 }
 
-function Loading() {
+function hint() {
+  return sourceMode() === 'jellyfin'
+    ? '请检查 config.json 的 jellyfin 配置，以及 Jellyfin 是否可访问'
+    : '请检查 VITE_CDN_BASE 配置或 catalog.json 是否可访问'
+}
+
+function Splash({
+  emoji,
+  text,
+  sub,
+  bounce,
+}: {
+  emoji: string
+  text: string
+  sub?: string
+  bounce?: boolean
+}) {
   return (
-    <div className="flex flex-col items-center justify-center p-20 text-gray-400">
-      <div className="animate-bounce text-5xl">🍿</div>
-      <p className="mt-3 font-bold">正在加载片库…</p>
+    <div className="flex flex-col items-center justify-center gap-3 p-16 text-center">
+      <div className={`text-6xl ${bounce ? 'animate-bounce' : ''}`}>{emoji}</div>
+      <p className="max-w-xs text-lg font-black text-ink/80">{text}</p>
+      {sub && <p className="max-w-xs text-sm font-bold text-ink/40">{sub}</p>}
     </div>
   )
 }

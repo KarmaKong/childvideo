@@ -4,6 +4,18 @@ import { getSource } from '../lib/source'
 import { findVideo, nextInSeries, useCatalog } from '../lib/catalog'
 import { placeholderPoster } from '../lib/poster'
 import { checkPlaybackAllowed, type BlockReason } from '../lib/guard'
+import {
+  Back10,
+  ChevLeft,
+  Expand,
+  Fwd10,
+  Lock,
+  Pause,
+  Play,
+  Replay,
+  Star,
+  StarLine,
+} from '../components/icons'
 import { useSettingsStore } from '../store/useSettingsStore'
 import { useProgressStore } from '../store/useProgressStore'
 
@@ -277,15 +289,19 @@ export default function Player() {
 
   if (catalog && !video)
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-4 text-white">
-        <p className="text-xl">找不到这个视频 😕</p>
+      <div className="flex h-screen flex-col items-center justify-center gap-4 bg-ink text-white">
+        <div className="text-6xl">🙈</div>
+        <p className="text-xl font-black">这个视频不见啦</p>
         <button className="btn-kid" onClick={() => nav('/')}>
-          回首页
+          回家
         </button>
       </div>
     )
 
   const poster = video ? (getSource().resolvePoster(video) ?? placeholderPoster(video.title)) : ''
+  const nextPoster = next
+    ? (getSource().resolvePoster(next) ?? placeholderPoster(next.title))
+    : ''
 
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-black">
@@ -297,40 +313,40 @@ export default function Player() {
         onClick={togglePlay}
       />
 
-      {/* 锁屏遮罩 */}
+      {/* 锁屏遮罩：按住小锁解锁 */}
       {locked && (
-        <div className="absolute inset-0 z-40 flex items-end justify-center pb-10">
+        <div className="absolute inset-0 z-40 flex items-end justify-center pb-12">
           <button
             onMouseDown={startUnlock}
             onMouseUp={cancelUnlock}
             onMouseLeave={cancelUnlock}
             onTouchStart={startUnlock}
             onTouchEnd={cancelUnlock}
-            className="rounded-full bg-white/85 px-6 py-3 text-base font-bold text-gray-700 shadow-lg"
+            className="flex items-center gap-3 rounded-pill bg-white/90 px-6 py-4 text-lg font-extrabold text-ink shadow-toysm active:scale-95"
           >
-            🔒 已锁定 · 长按解锁
+            <Lock className="h-6 w-6" /> 已锁住 · 按住这里
           </button>
         </div>
       )}
 
       {/* 阻断遮罩（就寝 / 时长用尽） */}
       {block.blocked && (
-        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-5 bg-black/85 p-8 text-center text-white">
-          <div className="text-6xl">{block.kind === 'bedtime' ? '😴' : '🌙'}</div>
-          <p className="max-w-xs text-xl font-bold">{block.message}</p>
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-ink/95 p-8 text-center text-white">
+          <div className="animate-bounce text-7xl">{block.kind === 'bedtime' ? '🌙' : '⏰'}</div>
+          <p className="max-w-xs text-2xl font-black leading-snug">{block.message}</p>
           <button className="btn-kid" onClick={() => nav('/')}>
-            好的
+            好哒
           </button>
         </div>
       )}
 
       {/* 播放结束推荐 */}
       {ended && !block.blocked && (
-        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-4 bg-black/80 p-8 text-white">
-          <p className="text-2xl font-extrabold">看完啦！🎉</p>
-          <div className="flex gap-3">
+        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-6 bg-ink/92 p-6 text-white">
+          <p className="text-3xl font-black">看完啦 🎉</p>
+          <div className="flex flex-wrap items-stretch justify-center gap-4">
             <button
-              className="btn-ghost"
+              className="press flex w-40 flex-col items-center gap-2 rounded-blob bg-white/10 p-4"
               onClick={() => {
                 const el = videoRef.current!
                 el.currentTime = 0
@@ -338,17 +354,32 @@ export default function Player() {
                 setEnded(false)
               }}
             >
-              🔁 再看一遍
+              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-ink">
+                <Replay className="h-8 w-8" />
+              </span>
+              <span className="font-extrabold">再看一遍</span>
             </button>
+
             {next && (
-              <button className="btn-kid" onClick={() => nav(`/watch/${next.id}`)}>
-                下一集 ›
+              <button
+                className="press flex w-40 flex-col items-center gap-2 rounded-blob bg-white p-3 text-ink"
+                onClick={() => nav(`/watch/${next.id}`)}
+              >
+                <img
+                  src={nextPoster}
+                  alt=""
+                  className="aspect-video w-full rounded-2xl object-cover"
+                />
+                <span className="line-clamp-1 text-sm font-extrabold">下一个：{next.title}</span>
               </button>
             )}
-            <button className="btn-ghost" onClick={() => nav('/')}>
-              🏠 回首页
-            </button>
           </div>
+          <button
+            className="rounded-pill bg-white/15 px-6 py-3 font-extrabold"
+            onClick={() => nav('/')}
+          >
+            回家
+          </button>
         </div>
       )}
 
@@ -362,71 +393,71 @@ export default function Player() {
           onClick={pokeUI}
         >
           {/* 顶部 */}
-          <div className="flex items-center gap-2 bg-gradient-to-b from-black/60 to-transparent p-4">
-            <button
-              className="rounded-full bg-white/20 px-4 py-2 text-lg font-bold text-white"
-              onClick={() => nav('/')}
-            >
-              ‹ 返回
+          <div className="flex items-center gap-3 bg-gradient-to-b from-black/70 to-transparent p-4">
+            <button className="btn-round h-12 w-12 shrink-0" onClick={() => nav('/')} aria-label="返回">
+              <ChevLeft className="h-6 w-6" />
             </button>
-            <span className="line-clamp-1 text-base font-bold text-white/90">
+            <span className="line-clamp-1 rounded-pill bg-black/35 px-3 py-1.5 text-sm font-extrabold text-white">
               {video?.title}
             </span>
-            <div className="ml-auto flex gap-2">
+            <div className="ml-auto flex shrink-0 gap-2">
               <button
-                className="rounded-full bg-white/20 p-2 text-xl"
+                className="btn-round h-12 w-12"
                 onClick={() => video && toggleFavorite(video.id)}
                 aria-label="收藏"
+                style={{ color: isFav ? '#FFC23C' : undefined }}
               >
-                {isFav ? '⭐' : '☆'}
+                {isFav ? <Star className="h-6 w-6" /> : <StarLine className="h-6 w-6" />}
+              </button>
+              <button className="btn-round h-12 w-12" onClick={() => setLocked(true)} aria-label="锁屏">
+                <Lock className="h-6 w-6" />
               </button>
               <button
-                className="rounded-full bg-white/20 p-2 text-xl"
-                onClick={() => setLocked(true)}
-                aria-label="锁屏"
-              >
-                🔓
-              </button>
-              <button
-                className="rounded-full bg-white/20 p-2 text-xl"
+                className="btn-round hidden h-12 w-12 sm:flex"
                 onClick={goFullscreen}
                 aria-label="全屏"
               >
-                ⛶
+                <Expand className="h-6 w-6" />
               </button>
             </div>
           </div>
 
           {/* 中间大按钮 */}
-          <div className="flex items-center justify-center gap-8">
-            <button className="text-5xl drop-shadow-lg" onClick={() => seek(-10)}>
-              ⏪
+          <div className="flex items-center justify-center gap-6 sm:gap-10">
+            <button className="btn-round h-16 w-16 sm:h-20 sm:w-20" onClick={() => seek(-10)} aria-label="后退">
+              <Back10 className="h-8 w-8" />
             </button>
             <button
-              className="flex h-24 w-24 items-center justify-center rounded-full bg-white/25 text-5xl backdrop-blur"
+              className="flex h-24 w-24 items-center justify-center rounded-full bg-candy-coral text-white shadow-toy active:scale-90 sm:h-28 sm:w-28"
               onClick={togglePlay}
+              aria-label={playing ? '暂停' : '播放'}
             >
-              {playing ? '⏸️' : '▶️'}
+              {playing ? (
+                <Pause className="h-12 w-12" />
+              ) : (
+                <Play className="h-12 w-12 translate-x-[3px]" />
+              )}
             </button>
-            <button className="text-5xl drop-shadow-lg" onClick={() => seek(10)}>
-              ⏩
+            <button className="btn-round h-16 w-16 sm:h-20 sm:w-20" onClick={() => seek(10)} aria-label="快进">
+              <Fwd10 className="h-8 w-8" />
             </button>
           </div>
 
           {/* 底部进度 */}
-          <div className="bg-gradient-to-t from-black/70 to-transparent p-4">
-            <div className="flex items-center gap-3 text-sm font-bold text-white">
-              <span>{fmt(cur)}</span>
+          <div className="bg-gradient-to-t from-black/80 to-transparent p-4 pb-6">
+            <div className="flex items-center gap-3 font-extrabold tabular-nums text-white">
+              <span className="text-sm">{fmt(cur)}</span>
               <input
                 type="range"
+                className="seek flex-1"
                 min={0}
                 max={dur || 0}
                 step={1}
                 value={cur}
                 onChange={seekTo}
-                className="h-2 flex-1 cursor-pointer accent-kid-primary"
+                aria-label="进度"
               />
-              <span>{fmt(dur)}</span>
+              <span className="text-sm">{fmt(dur)}</span>
             </div>
           </div>
         </div>

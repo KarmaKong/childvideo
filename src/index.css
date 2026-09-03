@@ -10,27 +10,81 @@ body,
 
 body {
   margin: 0;
-  background: theme('colors.kid.bg');
-  color: #3a2e28;
+  background: theme('colors.cream');
+  color: theme('colors.ink');
   font-family: theme('fontFamily.round');
+  font-weight: 700;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior: none;
   user-select: none;
 }
 
-/* Hide native video controls when we render our own overlay */
 video::-webkit-media-controls {
   display: none !important;
 }
 
 @layer components {
+  /* 玩具感按钮：厚底、圆胖、按下去会陷 */
   .btn-kid {
-    @apply inline-flex items-center justify-center gap-2 rounded-blob bg-kid-primary px-6 py-3
-           text-lg font-bold text-white shadow-lg active:scale-95 transition-transform;
+    @apply inline-flex items-center justify-center gap-2 rounded-pill bg-candy-coral px-7 py-4
+           text-xl font-extrabold text-white shadow-toysm
+           transition-transform duration-100 active:translate-y-1 active:scale-95;
   }
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-blob bg-white px-5 py-3
-           text-lg font-bold text-kid-primary shadow active:scale-95 transition-transform;
+    @apply inline-flex items-center justify-center gap-2 rounded-pill bg-white px-6 py-4
+           text-xl font-extrabold text-candy-coral shadow-toysm
+           transition-transform duration-100 active:translate-y-1 active:scale-95;
+  }
+  /* 大圆按钮（播放器用） */
+  .btn-round {
+    @apply flex items-center justify-center rounded-full bg-white/90 text-ink shadow-toysm
+           transition-transform duration-100 active:scale-90;
+  }
+  .press {
+    @apply transition-transform duration-100 active:scale-[0.94];
+  }
+}
+
+/* 播放器进度条：粗、圆、好按 */
+input.seek {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.28);
+  outline: none;
+}
+input.seek::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: theme('colors.candy.coral');
+  border: 4px solid #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+input.seek::-moz-range-thumb {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: theme('colors.candy.coral');
+  border: 4px solid #fff;
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pop,
+  .animate-bloom,
+  .animate-wiggle {
+    animation: none !important;
+  }
+  .press,
+  .btn-kid,
+  .btn-ghost,
+  .btn-round {
+    transition: none !important;
   }
 }
