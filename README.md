@@ -116,11 +116,10 @@ ossutil cp -r media/ oss://your-bucket/childvideo/media/ --update
 Jellyfin 管存储 / 转码 / 封面刮削 / 进度同步，nginx 同源反代绕开 CORS，前端只是静态包。
 家长控制（时长上限、就寝锁定、分类白名单、按年龄过滤）仍在前端。
 
-- **从零到孩子能看的完整执行手册（交给 agent 跑）**：见 [`deploy/RUNBOOK.md`](deploy/RUNBOOK.md)
-  ——已有 Jellyfin，端到端：建 kid 用户/Key → 起 cv-web → 加内容 → 孩子设备接入
-- 一键起服务、Jellyfin 首次设置、`config.json` 填法：见 [`deploy/README.md`](deploy/README.md)
-- 连 Jellyfin 一起起（NAS 上没有 Jellyfin 时）的 agent 清单：见 [`deploy/HANDOFF.md`](deploy/HANDOFF.md)
-- 往库里加内容（yt-dlp / 本地文件 → ffmpeg → 落库 → 触发扫描）：见 [`tools/ingest/README.md`](tools/ingest/README.md)
+- **部署就看这一个**：[`deploy/RUNBOOK.md`](deploy/RUNBOOK.md) —— 从零到孩子能看的完整执行手册
+  （建 kid 用户/Key → 起 cv-web → 加内容 → 孩子设备接入；附录含「NAS 还没有 Jellyfin」的情况）
+- 背景说明 / 配置字段详解：[`deploy/README.md`](deploy/README.md)
+- 加内容工具：[`tools/ingest/README.md`](tools/ingest/README.md)
 
 ```
 浏览器 ─► nginx ─┬─ /            → 儿童前端 dist/

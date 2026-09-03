@@ -1,9 +1,13 @@
 # 小小影院 · 从零到孩子能看的完整执行手册
 
+> **这是唯一的部署文档，从头做到尾就行，不用再看别的。**
 > 交给另一台机器上的 agent 执行。目标：在现有 NAS Jellyfin 之上，跑起儿童前端，
 > 加几个视频，让孩子的平板点一个图标就能全屏看。
 >
 > 仓库（公开，直接 clone）：`https://github.com/KarmaKong/childvideo`
+>
+> 已完成（用户手动）：NAS 上 Jellyfin 已装、能访问、媒体库已连。
+> 本手册负责：其余全部。
 
 ---
 
@@ -243,3 +247,21 @@ node ingest.mjs add "<...>" -c 儿歌 --copy
 cd childvideo/deploy && docker compose down     # 仅删 cv-web 容器
 ```
 Jellyfin 里若已建 kid 用户 / API Key，不影响现有内容；要撤就在控制台删掉那个用户和那个 Key。
+
+---
+
+## 附录：如果 NAS 上还没有 Jellyfin
+
+用 compose 连 Jellyfin 一起起，其余步骤照旧：
+
+```bash
+cd childvideo/deploy
+cp .env.example .env && cp config.example.json config.json
+#   .env 里 JF_UPSTREAM 保持默认 http://jellyfin:8096
+#   JELLYFIN_BIND=0.0.0.0:8096，PUID/PGID 填 <HOST> 上 `id` 的结果
+mkdir -p media jellyfin/config jellyfin/cache
+docker compose --profile bundled up -d --build      # ← 带 --profile bundled
+```
+
+- Jellyfin 管理台 `http://<HOST_IP>:8096`，先过首次向导建管理员，再按第 3 步继续。
+- 儿童库路径填 `/media`；`ingest` 的 `MEDIA_ROOT` 填宿主的 `childvideo/deploy/media`。
