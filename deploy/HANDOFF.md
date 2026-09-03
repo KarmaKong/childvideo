@@ -26,11 +26,16 @@
 ## 环境检查（任一不满足 → 回报并停，不要自行安装/改系统）
 
 ```bash
-ls /Users/jiawaycheung/childvideo/package.json /Users/jiawaycheung/childvideo/deploy   # 仓库在此；不在别处找
+ls /Users/dokwan/childvideo/package.json /Users/dokwan/childvideo/deploy
 node -v            # 需 ≥ 18
 docker version     # daemon 要在跑（Docker Desktop / OrbStack / colima 均可）
 docker compose version   # 需 v2
 ```
+
+**若 `/Users/dokwan/childvideo` 不存在**：仓库还没传到这台 Mac mini（它是本地仓库，没有 git 远程）。
+不要自己找、不要 `git clone`。回报「仓库缺失」并停，由用户从另一台机器传过来
+（用户侧命令：`rsync -av --exclude node_modules --exclude dist /Users/jiawaycheung/childvideo/ dokwan@<mac-mini-IP>:/Users/dokwan/childvideo/`）。
+用户也可能已用别的方式放到别处 —— 那就让用户告知确切路径，并把下面所有 `/Users/dokwan/childvideo` 替换成该路径。
 
 ---
 
@@ -39,13 +44,13 @@ docker compose version   # 需 v2
 ### 1. 依赖
 
 ```bash
-cd /Users/jiawaycheung/childvideo
+cd /Users/dokwan/childvideo
 npm install
 ```
 
 ### 2. 前端配置
 
-若已存在 `.env`，先 `cp .env .env.bak`。然后写 `/Users/jiawaycheung/childvideo/.env`：
+若已存在 `.env`，先 `cp .env .env.bak`。然后写 `/Users/dokwan/childvideo/.env`：
 
 ```
 VITE_SOURCE=jellyfin
@@ -69,7 +74,7 @@ npm run build
 ### 4. nginx 容器配置
 
 ```bash
-cd /Users/jiawaycheung/childvideo/deploy
+cd /Users/dokwan/childvideo/deploy
 cp .env.example .env
 ```
 
@@ -132,7 +137,7 @@ docker compose ps：<粘贴>
 ## 回滚
 
 ```bash
-cd /Users/jiawaycheung/childvideo/deploy && docker compose down
+cd /Users/dokwan/childvideo/deploy && docker compose down
 ```
 
 只删 `cv-web` 容器，其它一概不动。
