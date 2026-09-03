@@ -31,5 +31,5 @@ export function catalogUrl(): string {
 }
 
 export function appName(): string {
-  return envStr(runtimeConfig().appName) || '小小影院'
+  return envStr(runtimeConfig().appName) || '乐乐影库'
 }

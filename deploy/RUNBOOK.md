@@ -1,4 +1,4 @@
-# 小小影院 · 从零到孩子能看的完整执行手册
+# 乐乐影库 · 从零到孩子能看的完整执行手册
 
 > **这是唯一的部署文档，从头做到尾就行，不用再看别的。**
 > 交给另一台机器上的 agent 执行。目标：在现有 NAS Jellyfin 之上，跑起儿童前端，
@@ -150,7 +150,7 @@ docker exec cv-web wget -qO- "$JF_UPSTREAM/System/Info/Public" >/dev/null 2>&1 \
 ```json
 {
   "source": "jellyfin",
-  "appName": "小小影院",
+  "appName": "乐乐影库",
   "jellyfin": {
     "base": "/jf",
     "key": "<KEY>",

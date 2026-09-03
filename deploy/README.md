@@ -78,7 +78,7 @@ TerraMaster 也可在 **应用中心 → Docker** 里导入 `docker-compose.yml`
 ```json
 {
   "source": "jellyfin",
-  "appName": "小小影院",
+  "appName": "乐乐影库",
   "jellyfin": {
     "base": "/jf",
     "key": "<第4步的 API Key>",

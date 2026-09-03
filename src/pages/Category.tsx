@@ -7,7 +7,7 @@ import { ChevLeft } from '../components/icons'
 import type { Video } from '../types'
 
 /**
- * 「A 网格」：从首页某个世界块点进来后看到的页面。
+ * 某个片架点「更多」/ 收藏 / 全部 的落地页：深底密集海报网格。
  * categoryId 支持三种：真实分类 id / 'all'（全部）/ 'fav'（收藏）。
  */
 export default function CategoryPage() {
@@ -18,7 +18,11 @@ export default function CategoryPage() {
   const favorites = useProgressStore((s) => s.favorites)
 
   if (!catalog)
-    return <p className="p-16 text-center text-lg font-black text-ink/40">加载中…</p>
+    return (
+      <p className="cinema-bg min-h-screen p-16 text-center text-lg font-black text-white/40">
+        加载中…
+      </p>
+    )
 
   const isAll = categoryId === 'all'
   const isFav = categoryId === 'fav'
@@ -41,20 +45,24 @@ export default function CategoryPage() {
   const title = isAll ? '全部' : isFav ? '收藏' : (cat?.name ?? '分类')
 
   return (
-    <div className="pb-12">
+    <div className="cinema-bg min-h-screen pb-12">
       <div className="flex items-center gap-3 px-4 py-4">
-        <button onClick={() => nav('/')} className="btn-round h-12 w-12" aria-label="返回">
+        <button
+          onClick={() => nav('/')}
+          className="btn-round h-12 w-12"
+          aria-label="返回"
+        >
           <ChevLeft className="h-6 w-6" />
         </button>
-        <h1 className="text-2xl font-black">
+        <h1 className="text-2xl font-black text-white">
           {icon} {title}
         </h1>
       </div>
 
       {!allowed ? (
-        <p className="p-16 text-center font-black text-ink/40">这个分类被藏起来啦</p>
+        <p className="p-16 text-center font-black text-white/40">这个分类被藏起来啦</p>
       ) : vids.length === 0 ? (
-        <p className="p-16 text-center font-black text-ink/40">
+        <p className="p-16 text-center font-black text-white/40">
           {isFav ? '还没有收藏，点视频右上角小星星试试吧' : '这里还没有视频'}
         </p>
       ) : (

@@ -66,7 +66,7 @@ export default function Tile({ video, index = 0 }: { video: Video; index?: numbe
         )}
       </div>
 
-      <p className="mt-2 line-clamp-1 px-1 text-[15px] font-extrabold text-ink/85">
+      <p className="mt-2 line-clamp-1 px-1 text-[15px] font-extrabold text-white/90">
         {video.title}
       </p>
     </button>

@@ -19,10 +19,10 @@ export default function App() {
 
   return (
     <div className="mx-auto flex min-h-full max-w-3xl flex-col">
-      <header className="sticky top-0 z-20 flex items-center gap-2 bg-cream/85 px-4 py-3 backdrop-blur">
+      <header className="sticky top-0 z-20 flex items-center gap-2 bg-night/90 px-4 py-3 backdrop-blur">
         <Link
           to="/"
-          className="press flex shrink-0 items-center gap-2 whitespace-nowrap text-2xl font-black tracking-tight"
+          className="press flex shrink-0 items-center gap-2 whitespace-nowrap text-2xl font-black tracking-tight text-white"
         >
           <span className="text-3xl">🐻</span>
           <span>{appName()}</span>
