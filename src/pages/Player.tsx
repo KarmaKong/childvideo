@@ -393,7 +393,7 @@ export default function Player() {
           onClick={pokeUI}
         >
           {/* 顶部 */}
-          <div className="flex items-center gap-3 bg-gradient-to-b from-black/70 to-transparent p-4">
+          <div className="flex items-center gap-3 bg-gradient-to-b from-ink/75 to-transparent p-4">
             <button className="btn-round h-12 w-12 shrink-0" onClick={() => nav('/')} aria-label="返回">
               <ChevLeft className="h-6 w-6" />
             </button>
@@ -444,7 +444,7 @@ export default function Player() {
           </div>
 
           {/* 底部进度 */}
-          <div className="bg-gradient-to-t from-black/80 to-transparent p-4 pb-6">
+          <div className="bg-gradient-to-t from-ink/85 to-transparent p-4 pb-6">
             <div className="flex items-center gap-3 font-extrabold tabular-nums text-white">
               <span className="text-sm">{fmt(cur)}</span>
               <input

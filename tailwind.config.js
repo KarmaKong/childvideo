@@ -18,6 +18,7 @@ export default {
       colors: {
         cream: '#FFF6E9',
         ink: '#3A2E28',
+        night: '#241B16',
         candy: {
           coral: '#FF7A59',
           sky: '#3FB9E8',

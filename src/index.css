@@ -46,6 +46,14 @@ video::-webkit-media-controls {
   }
 }
 
+/* 首页「选世界」深底面板：暖黑底 + 细小圆点纹理，避免大色块之间显得太空 */
+.world-panel {
+  background-color: theme('colors.night');
+  background-image: radial-gradient(rgba(255, 255, 255, 0.055) 1.6px, transparent 1.6px);
+  background-size: 22px 22px;
+}
+
+
 /* 播放器进度条：粗、圆、好按 */
 input.seek {
   -webkit-appearance: none;

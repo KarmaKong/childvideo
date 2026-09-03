@@ -1,19 +1,18 @@
-import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useCatalog } from '../lib/catalog'
 import { sourceMode } from '../lib/source'
-import Grid from '../components/Grid'
 import Tile from '../components/Tile'
-import CategoryBubble from '../components/CategoryBubble'
+import WorldBlock from '../components/WorldBlock'
 import { isCategoryAllowed, useSettingsStore } from '../store/useSettingsStore'
 import { useProgressStore } from '../store/useProgressStore'
 import type { Video } from '../types'
 
 export default function Home() {
+  const nav = useNavigate()
   const { catalog, error } = useCatalog()
   const settings = useSettingsStore()
   const history = useProgressStore((s) => s.history)
   const favorites = useProgressStore((s) => s.favorites)
-  const [filter, setFilter] = useState<string>('all')
 
   if (error) return <Splash emoji="🌧️" text={error} sub={hint()} />
   if (!catalog) return <Splash emoji="🍿" text="正在准备好看的…" bounce />
@@ -28,17 +27,16 @@ export default function Home() {
     .map((id) => byId.get(id))
     .filter((v): v is Video => !!v && visible(v))
     .slice(0, 6)
-  const favList = favorites.map((id) => byId.get(id)).filter((v): v is Video => !!v && visible(v))
+  const favCount = favorites
+    .map((id) => byId.get(id))
+    .filter((v): v is Video => !!v && visible(v)).length
   const cats = catalog.categories.filter(
     (c) => isCategoryAllowed(settings, c.id) && all.some((v) => v.category === c.id),
   )
 
-  const shown =
-    filter === 'all' ? all : filter === 'fav' ? favList : all.filter((v) => v.category === filter)
-
   return (
-    <div className="pb-12">
-      {continueList.length > 0 && filter === 'all' && (
+    <div className="pb-4">
+      {continueList.length > 0 && (
         <section className="pt-3">
           <h2 className="mb-2 px-4 text-lg font-black text-ink/80">▶ 继续看</h2>
           <div className="flex gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -51,42 +49,27 @@ export default function Home() {
         </section>
       )}
 
-      {(cats.length > 0 || favList.length > 0) && (
-        <div className="flex gap-4 overflow-x-auto px-4 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <CategoryBubble
-            icon="🌈"
-            label="全部"
-            color="#FF7A59"
-            active={filter === 'all'}
-            onClick={() => setFilter('all')}
-          />
-          {favList.length > 0 && (
-            <CategoryBubble
-              icon="⭐"
-              label="收藏"
-              color="#FFC23C"
-              active={filter === 'fav'}
-              onClick={() => setFilter('fav')}
-            />
+      {/* 深底「选世界」面板：先挑一个大大的分类，再进网格 */}
+      <section className="world-panel mt-4 rounded-t-[2.5rem] px-5 pb-10 pt-7">
+        <h2 className="mb-1 text-2xl font-black text-white">去哪个世界玩呀？</h2>
+        <p className="mb-5 text-sm font-bold text-white/50">选一个大大的图标，马上开始看</p>
+
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+          <WorldBlock icon="🌈" label="全部" color="rainbow" onClick={() => nav('/c/all')} />
+          {favCount > 0 && (
+            <WorldBlock icon="⭐" label="收藏" color="#FFC23C" onClick={() => nav('/c/fav')} />
           )}
           {cats.map((c) => (
-            <CategoryBubble
+            <WorldBlock
               key={c.id}
               icon={c.icon}
               label={c.name}
               color={c.color || '#3FB9E8'}
-              active={filter === c.id}
-              onClick={() => setFilter(c.id)}
+              onClick={() => nav(`/c/${c.id}`)}
             />
           ))}
         </div>
-      )}
-
-      {shown.length > 0 ? (
-        <Grid videos={shown} />
-      ) : (
-        <Splash emoji="🐣" text={filter === 'fav' ? '还没有收藏' : '这里还没有视频'} />
-      )}
+      </section>
     </div>
   )
 }
