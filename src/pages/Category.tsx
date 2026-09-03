@@ -6,9 +6,12 @@ import { useProgressStore } from '../store/useProgressStore'
 import { ChevLeft } from '../components/icons'
 import type { Video } from '../types'
 
+const RAINBOW = 'linear-gradient(135deg,#FF7A59,#FFC23C,#4BC673,#3FB9E8,#9B7BF0,#FF7FB0)'
+
 /**
- * 某个片架点「更多」/ 收藏 / 全部 的落地页：深底密集海报网格。
+ * 某个片架点「更多」/ 收藏 / 全部 的落地页：通栏色块 banner + 深底密集海报网格。
  * categoryId 支持三种：真实分类 id / 'all'（全部）/ 'fav'（收藏）。
+ * 参考 Spotify Kids 的 Explore 分类列表：进哪个分类，banner 就是那个分类自己的颜色，一眼能认出来。
  */
 export default function CategoryPage() {
   const { categoryId = '' } = useParams()
@@ -43,20 +46,21 @@ export default function CategoryPage() {
 
   const icon = isAll ? '🌈' : isFav ? '⭐' : cat?.icon
   const title = isAll ? '全部' : isFav ? '收藏' : (cat?.name ?? '分类')
+  const bannerBg = isAll ? RAINBOW : isFav ? '#FFC23C' : cat?.color || '#3FB9E8'
 
   return (
     <div className="cinema-bg min-h-screen pb-12">
-      <div className="flex items-center gap-3 px-4 py-4">
-        <button
-          onClick={() => nav('/')}
-          className="btn-round h-12 w-12"
-          aria-label="返回"
-        >
+      <div
+        className="rounded-b-[2rem] px-4 pb-7 pt-4 shadow-lg"
+        style={{ background: bannerBg }}
+      >
+        <button onClick={() => nav('/')} className="btn-round h-11 w-11" aria-label="返回">
           <ChevLeft className="h-6 w-6" />
         </button>
-        <h1 className="text-2xl font-black text-white">
-          {icon} {title}
-        </h1>
+        <div className="mt-4 flex items-center gap-3">
+          <span className="text-5xl leading-none drop-shadow-sm">{icon}</span>
+          <h1 className="text-3xl font-black text-white drop-shadow-sm">{title}</h1>
+        </div>
       </div>
 
       {!allowed ? (
@@ -66,7 +70,9 @@ export default function CategoryPage() {
           {isFav ? '还没有收藏，点视频右上角小星星试试吧' : '这里还没有视频'}
         </p>
       ) : (
-        <Grid videos={vids} />
+        <div className="pt-5">
+          <Grid videos={vids} />
+        </div>
       )}
     </div>
   )

@@ -32,16 +32,32 @@ export default function Home() {
 
   return (
     <div className="cinema-bg min-h-screen pb-12">
-      <div className="flex justify-end px-4 pt-3">
+      <div className="grid grid-cols-2 gap-3 px-4 pt-4">
+        {favList.length > 0 && (
+          <button
+            className="press flex items-center gap-2 rounded-blob px-4 py-5 shadow-toysm"
+            style={{ background: '#FFC23C' }}
+            onClick={() => nav('/c/fav')}
+          >
+            <span className="text-3xl leading-none drop-shadow-sm">⭐</span>
+            <span className="text-lg font-black text-white drop-shadow-sm">收藏</span>
+          </button>
+        )}
         <button
-          className="press rounded-pill bg-white/10 px-4 py-2 text-sm font-extrabold text-white/70"
+          className={`press flex items-center gap-2 rounded-blob px-4 py-5 shadow-toysm ${
+            favList.length > 0 ? '' : 'col-span-2'
+          }`}
+          style={{
+            background: 'linear-gradient(135deg,#FF7A59,#FFC23C,#4BC673,#3FB9E8,#9B7BF0,#FF7FB0)',
+          }}
           onClick={() => nav('/c/all')}
         >
-          🌈 看全部
+          <span className="text-3xl leading-none drop-shadow-sm">🌈</span>
+          <span className="text-lg font-black text-white drop-shadow-sm">看全部</span>
         </button>
       </div>
+
       <Shelf icon="▶" title="继续看" videos={continueList} />
-      <Shelf icon="⭐" title="收藏" videos={favList} linkTo="/c/fav" />
       {cats.map((c) => (
         <Shelf
           key={c.id}
