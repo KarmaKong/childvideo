@@ -16,4 +16,5 @@ yarn-error.log*
 # 自建部署运行时数据
 deploy/media/
 deploy/jellyfin/
+deploy/config.json
 tools/ingest/.ingestrc.json

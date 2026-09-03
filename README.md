@@ -3,12 +3,16 @@
 面向儿童的 Web 视频播放器，预置精选片库。两种数据源，切 `.env` 里的 `VITE_SOURCE` 即可，
 页面代码不变：
 
-| `VITE_SOURCE` | 片库与存储 | 进度同步 | 适合 |
+| 数据源 | 片库与存储 | 进度同步 | 适合 |
 |---|---|---|---|
 | `static`（默认） | `catalog.json` + 对象存储 / CDN（阿里云 OSS、腾讯云 COS、七牛，不绑定厂商） | 浏览器本地 | 纯静态托管、零后端 |
-| `jellyfin` | 自建 Jellyfin 的「儿童」媒体库 | 回写 Jellyfin，多设备继续看 | 有一台国内服务器 / NAS，见 [`deploy/`](deploy/) |
+| `jellyfin` | 自建 Jellyfin 的「儿童」媒体库 | 回写 Jellyfin，多设备继续看 | 有一台 NAS / 服务器，见 [`deploy/`](deploy/) |
 
 数据源抽象在 [`src/lib/source/`](src/lib/source/)：`CatalogSource` 接口 + `StaticSource` / `JellyfinSource` 两实现。
+
+**配置有两层**：`npm run dev` / `npm run build` 用根目录 `.env`（`VITE_*`）；
+正式部署用 [`deploy/config.json`](deploy/config.example.json)（浏览器启动时 fetch，运行时生效，改完不用重新打包）。
+`config.json` 优先，缺省回退 `.env`。NAS 部署时前端在容器内构建（`Dockerfile.web`），NAS 本身不用装 Node。
 
 ## 特性
 
@@ -112,26 +116,21 @@ ossutil cp -r media/ oss://your-bucket/childvideo/media/ --update
 Jellyfin 管存储 / 转码 / 封面刮削 / 进度同步，nginx 同源反代绕开 CORS，前端只是静态包。
 家长控制（时长上限、就寝锁定、分类白名单、按年龄过滤）仍在前端。
 
-- 一键起服务、Jellyfin 首次设置、`.env` 填法：见 [`deploy/README.md`](deploy/README.md)
+- 一键起服务、Jellyfin 首次设置、`config.json` 填法：见 [`deploy/README.md`](deploy/README.md)
+- 交给 agent 执行的分步清单：见 [`deploy/HANDOFF.md`](deploy/HANDOFF.md)
 - 往库里加内容（yt-dlp / 本地文件 → ffmpeg → 落库 → 触发扫描）：见 [`tools/ingest/README.md`](tools/ingest/README.md)
 
 ```
-浏览器 ─► nginx ─┬─ /       → 儿童前端 dist/
-                 └─ /jf/*   → Jellyfin
+浏览器 ─► nginx ─┬─ /            → 儿童前端 dist/
+                 ├─ /config.json → deploy/config.json（运行时配置）
+                 └─ /jf/*        → Jellyfin
 ```
 
-`.env` 关键项：
+`deploy/config.json` 关键项：`source: "jellyfin"`、`jellyfin.key`、`jellyfin.userId`、
+`jellyfin.categoryMode`（`genre` 用视频 Genre 当分类，入库 CLI 会写好）、
+`jellyfin.stream`（`direct` 直连 / `hls` 让 Jellyfin 转码）。改完 `docker compose restart web` 即生效。
 
-```
-VITE_SOURCE=jellyfin
-VITE_JELLYFIN_BASE=/jf
-VITE_JELLYFIN_KEY=...
-VITE_JELLYFIN_USER_ID=...
-VITE_JELLYFIN_CATEGORY_MODE=genre     # 用视频的 Genre 当分类；入库 CLI 会写好
-VITE_JELLYFIN_STREAM=direct           # 直连播放；hls 则让 Jellyfin 转码
-```
-
-本地对接远端 Jellyfin 开发时，设 `VITE_JELLYFIN_ORIGIN=http://host:8096`，dev server 会把 `/jf` 代理过去。
+本地对接远端 Jellyfin 开发时，`.env` 里设 `VITE_JELLYFIN_ORIGIN=http://host:8096`，dev server 会把 `/jf` 代理过去。
 
 ## 后续（v3 建议）
 

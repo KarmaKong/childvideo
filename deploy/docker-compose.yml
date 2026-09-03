@@ -1,26 +1,24 @@
 # 小小影院 · 自建部署
 #
-# 两种用法：
+# 前端在容器内构建（多阶段 Dockerfile.web），NAS 无需装 Node。
 #
-# A) 已经有 Jellyfin（TerraMaster/群晖 应用中心装的，或你自己的容器）—— 只跑前端 nginx：
-#      cd deploy && cp .env.example .env
-#      在 .env 里把 JF_UPSTREAM 指向现有 Jellyfin，例如
-#        JF_UPSTREAM=http://192.168.1.50:8096
-#      docker compose up -d            # 只起 cv-web
+# A) 已经有 Jellyfin（TerraMaster/群晖 应用中心装的，或你自己的容器）—— 只跑前端：
+#      cd deploy && cp .env.example .env && cp config.example.json config.json
+#      .env 里 JF_UPSTREAM 指向现有 Jellyfin，例如 http://192.168.1.50:8096
+#      docker compose up -d --build            # 只起 cv-web
 #
 # B) 全新装，连 Jellyfin 一起起：
-#      cd deploy && cp .env.example .env      # JF_UPSTREAM 保持默认 http://jellyfin:8096
+#      cd deploy && cp .env.example .env && cp config.example.json config.json
 #      mkdir -p media jellyfin/config jellyfin/cache
-#      docker compose --profile bundled up -d
+#      docker compose --profile bundled up -d --build
 #
 # 之后：开 http://NAS内网IP:8096 做 Jellyfin 设置（建库 / 建 kid 用户 / API Key），
-# 回项目根目录填 .env（VITE_SOURCE=jellyfin ...）→ npm run build → 回拷 dist/ →
-# docker compose up -d --force-recreate web
+# 把 Key + userId 填进 deploy/config.json → docker compose restart web（不用重建）。
 #
 # 儿童端： http://NAS内网IP:8080/
 
 services:
-  # 仅用法 B 需要：docker compose --profile bundled up -d
+  # 仅用法 B 需要：docker compose --profile bundled up -d --build
   jellyfin:
     profiles: ["bundled"]
     image: jellyfin/jellyfin:10.9.11
@@ -39,7 +37,10 @@ services:
       - cv
 
   web:
-    image: nginx:1.27-alpine
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.web
+    image: cv-web:local
     container_name: cv-web
     restart: unless-stopped
     environment:
@@ -53,7 +54,8 @@ services:
       - "${WEB_PORT:-8080}:80"
     volumes:
       - ./nginx.conf.template:/etc/nginx/templates/default.conf.template:ro
-      - ../dist:/usr/share/nginx/html:ro
+      # 运行时配置：覆盖镜像里打包的 config.json，改这个文件 restart 即生效，不用重建镜像
+      - ./config.json:/usr/share/nginx/html/config.json:ro
     networks:
       - cv
 

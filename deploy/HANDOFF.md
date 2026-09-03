@@ -1,143 +1,182 @@
-# 小小影院 · 部署交接单（给 hermes 执行）
+# 小小影院 · 部署交接单（在 NAS 上跑，给执行 agent）
 
 ## 目标
 
-在**这台 Mac mini** 上用一个 nginx 容器（`cv-web`）把「小小影院」儿童视频前端跑起来。
-它反向代理到本机**已经装好并配置好**的 Jellyfin（同源，绕开 CORS）。
-完成后局域网任意设备访问 `http://<Mac-mini-局域网IP>:8080/` 即儿童界面。
+在 **TerraMaster NAS** 上用 Docker Compose 一次起两个容器：
+`cv-jellyfin`（媒体服务器）+ `cv-web`（儿童前端 + 同源反代）。
+完成后局域网访问 `http://<NAS内网IP>:8080/` 是儿童界面，
+`http://<NAS内网IP>:8096` 是 Jellyfin 管理台。
 
-范围就这一件事。**不要**动现有 Jellyfin 的数据/配置；**不要**把 Jellyfin 迁到 NAS
-（那是用户回来后再决定）；**不要**把任何端口暴露到公网。
+前端在**容器内构建**（`Dockerfile.web` 多阶段），NAS **不需要装 Node**——`docker compose` 加 `--build` 即可。
+Jellyfin 的 Key / userId 通过编辑 `deploy/config.json` 生效，**改完只 restart，不用重建**。
 
----
-
-## 需要的输入（3 个值）
-
-用户会随任务给出。**缺任何一个 → 做到第 3 步为止，然后停下并在回报里列出缺什么。**
-
-| 变量 | 说明 | 自查方式 |
-|---|---|---|
-| `JELLYFIN_URL` | 本机 Jellyfin 地址，通常 `http://localhost:8096` | `curl -s http://localhost:8096/System/Info/Public` 返回 JSON 即在跑 |
-| `JELLYFIN_KEY` | Jellyfin API Key | 用它试：`curl -s -H "X-Emby-Token: <KEY>" "<JELLYFIN_URL>/Users"` 返回用户数组即有效 |
-| `JELLYFIN_USER_ID` | 儿童账号 `kid` 的用户 Id | 上一条返回里，找 `"Name":"kid"`（或用户指定的名字）对应的 `"Id"` |
+范围：把服务跑起来。**不要**把端口映射到公网；**不要**改 `src/` 代码；
+遇到需要抉择或缺信息就**停下回报**，不要猜。
 
 ---
 
-## 环境检查（任一不满足 → 回报并停，不要自行安装/改系统）
+## 阶段 0 · 摸情况（把每项结果都写进回报，然后按下面判断走）
 
-```bash
-ls /Users/dokwan/childvideo/package.json /Users/dokwan/childvideo/deploy
-node -v            # 需 ≥ 18
-docker version     # daemon 要在跑（Docker Desktop / OrbStack / colima 均可）
-docker compose version   # 需 v2
-```
-
-**若 `/Users/dokwan/childvideo` 不存在**：仓库还没传到这台 Mac mini（它是本地仓库，没有 git 远程）。
-不要自己找、不要 `git clone`。回报「仓库缺失」并停，由用户从另一台机器传过来
-（用户侧命令：`rsync -av --exclude node_modules --exclude dist /Users/jiawaycheung/childvideo/ dokwan@<mac-mini-IP>:/Users/dokwan/childvideo/`）。
-用户也可能已用别的方式放到别处 —— 那就让用户告知确切路径，并把下面所有 `/Users/dokwan/childvideo` 替换成该路径。
+1. **你能不能操作 NAS？**
+   - 若你在 NAS 上直接有 shell：继续。
+   - 若你在别的机器上：`ssh <nas用户>@<NAS内网IP>` 能进吗？不能就**停**，
+     回报「无法访问 NAS，需要用户开 SSH / 给账号」。
+2. **NAS 上有 Docker 吗？** 在 NAS 上执行：
+   ```
+   docker version
+   docker compose version   # 或 docker-compose version
+   ```
+   都没有就**停**，回报「NAS 无 Docker，需要用户在 TOS 应用中心装 Docker」。
+3. **NAS 上的存储路径**：`ls /` 看有没有 `/Volume1`（TerraMaster 常见，也可能是 `/Volume-1` / `/Volumes/...`）。
+   选一个可写目录做工作区，记为 `<WORKDIR>`，例如 `/Volume1/docker/childvideo`。
+4. **NAS 用户的 uid/gid**：在 NAS 上 `id`，记下 `uid=` 和 `gid=`（后面填进 `.env` 的 PUID/PGID）。
+5. **仓库怎么到 NAS**：`ls <WORKDIR>/package.json` 有没有？
+   - 有：跳到阶段 1。
+   - 没有：仓库要从有它的机器传过来。用户侧命令（在有仓库的那台机器上跑）：
+     ```
+     rsync -av --exclude node_modules --exclude dist --exclude .env --exclude 'deploy/config.json' \
+       <仓库路径>/ <nas用户>@<NAS内网IP>:<WORKDIR>/
+     ```
+     你无法自己完成这步就**停**，回报「仓库未就位，需用户 rsync，目标 <WORKDIR>」。
 
 ---
 
-## 步骤
-
-### 1. 依赖
+## 阶段 1 · 起容器
 
 ```bash
-cd /Users/dokwan/childvideo
-npm install
-```
-
-### 2. 前端配置
-
-若已存在 `.env`，先 `cp .env .env.bak`。然后写 `/Users/dokwan/childvideo/.env`：
-
-```
-VITE_SOURCE=jellyfin
-VITE_JELLYFIN_BASE=/jf
-VITE_JELLYFIN_KEY=<JELLYFIN_KEY>
-VITE_JELLYFIN_USER_ID=<JELLYFIN_USER_ID>
-VITE_JELLYFIN_CATEGORY_MODE=genre
-VITE_JELLYFIN_STREAM=direct
-```
-
-`VITE_JELLYFIN_LIBRARY_ID` 不用填。
-
-### 3. 打包
-
-```bash
-npm run build
-```
-
-产出 `dist/`。失败就贴完整报错并停。
-
-### 4. nginx 容器配置
-
-```bash
-cd /Users/dokwan/childvideo/deploy
+cd <WORKDIR>/deploy
 cp .env.example .env
+cp config.example.json config.json
+mkdir -p media jellyfin/config jellyfin/cache
 ```
 
-编辑 `deploy/.env`，只改这两行（其余保持默认）：
+编辑 `<WORKDIR>/deploy/.env`：
 
 ```
 WEB_PORT=8080
-JF_UPSTREAM=http://host.docker.internal:8096
+JF_UPSTREAM=http://jellyfin:8096
+JELLYFIN_BIND=0.0.0.0:8096
+PUID=<阶段0 第4步的 uid>
+PGID=<阶段0 第4步的 gid>
+TZ=Asia/Shanghai
 ```
 
-- `host.docker.internal` 在 Docker Desktop / OrbStack 上解析到宿主机。
-- 若用 colima 且该域名不通，改成 Mac mini 的局域网 IP，例如 `http://192.168.1.20:8096`。
-- 若 `JELLYFIN_URL` 端口不是 8096，这里同步改。
-- 若 8080 被占，换个端口并在回报里说明。
+`config.json` 先不用动（等阶段 3 拿到 Key 再填）。
 
-### 5. 起容器
+起服务（**注意 `--profile bundled`** 带上 Jellyfin，**`--build`** 在容器里构建前端，首次约 1–3 分钟）：
 
 ```bash
-docker compose up -d          # 只会起 cv-web；不要加 --profile bundled
+docker compose --profile bundled up -d --build
 docker compose ps
-docker compose logs --tail=40 web
+docker compose logs --tail=50 jellyfin
+docker compose logs --tail=30 web
 ```
 
-### 6. 验证（在 Mac mini 上）
+构建失败（拉不到 npm 包 / node 镜像）就**停**回报，别自己找 workaround。
+
+自测：
 
 ```bash
+curl -s -o /dev/null -w "jf=%{http_code}\n"    http://localhost:8096/System/Info/Public
 curl -s -o /dev/null -w "front=%{http_code}\n" http://localhost:8080/
-curl -s -o /dev/null -w "proxy=%{http_code}\n" http://localhost:8080/jf/System/Info/Public
-ipconfig getifaddr en0 || ipconfig getifaddr en1     # 取局域网 IP
 ```
 
-`front=200` 且 `proxy=200` 即基本成功。用局域网 IP 开 `http://<IP>:8080/` 应看到儿童首页
-（若 Jellyfin 儿童库还没有视频，首页会提示空，属正常）。
+`jf=200` 且 `front=200` → 阶段 1 完成。
 
 ---
 
-## 回报模板（做完贴给用户）
+## 阶段 2 · 停下，交回给用户做 Jellyfin 设置
+
+Jellyfin 首次设置是网页向导，你做不了。**在回报里明确写**：
+
+> Jellyfin 已在 `http://<NAS内网IP>:8096` 启动，请完成：
+> 1. 首次向导：建管理员账号（语言选中文）。
+> 2. 控制台 → 媒体库 → 添加：内容类型「家庭视频」，文件夹填 `/media`；
+>    展开高级，勾「Nfo」元数据保存器并拖到最前。
+> 3. 控制台 → 用户 → 新建 `kid`：取消所有管理权限，媒体库只勾儿童库，关「允许媒体下载」。
+> 4. 控制台 → API 密钥 → 新建，复制 **Key**。
+> 5. 控制台 → 用户 → 点开 `kid`，地址栏 `userId=` 后面那串是 **用户 ID**。
+> 把 Key 和 用户 ID 发我。
+
+拿到这两个值后进入阶段 3。（用户也可能选择把 Mac mini 上已配好的 Jellyfin
+config 目录拷进 `<WORKDIR>/deploy/jellyfin/config/` 来跳过 1–5，那样直接要 Key/userId 即可。）
+
+---
+
+## 阶段 3 · 填运行时配置（拿到 Key / userId 后）
+
+编辑 `<WORKDIR>/deploy/config.json`：
+
+```json
+{
+  "source": "jellyfin",
+  "appName": "小小影院",
+  "jellyfin": {
+    "base": "/jf",
+    "key": "<粘贴 API Key>",
+    "userId": "<粘贴 用户 ID>",
+    "libraryId": "",
+    "categoryMode": "genre",
+    "stream": "direct"
+  }
+}
+```
+
+让 `cv-web` 重新读取（config.json 是只读挂载，重启即可）：
+
+```bash
+cd <WORKDIR>/deploy
+docker compose restart web
+```
+
+验证：
+
+```bash
+curl -s http://localhost:8080/config.json                              # 应回显你写的 JSON
+curl -s -o /dev/null -w "proxy=%{http_code}\n" http://localhost:8080/jf/System/Info/Public   # 期望 200
+```
+
+浏览器开 `http://<NAS内网IP>:8080/`：应显示儿童首页。
+儿童库还没视频时首页提示为空，属正常（加视频见 `../tools/ingest`，用户回来后做）。
+
+---
+
+## 回报模板
 
 ```
-环境：node <版本> / docker <ok?> / compose <ok?>
-输入：URL=<..>  KEY=<打码>  USER_ID=<..>   （缺失的写“缺”）
-build：<成功 / 失败+报错>
-deploy/.env：WEB_PORT=<..>  JF_UPSTREAM=<..>
-docker compose ps：<粘贴>
-验证：front=<code>  proxy=<code>
-访问地址：http://<局域网IP>:8080/
-卡点/报错：<无 / 详情>
+阶段0：
+  NAS 访问=<直接shell / ssh ok / 不能>
+  docker=<版本 / 无>   compose=<版本 / 无>
+  WORKDIR=<路径>   uid/gid=<..>
+  仓库就位=<是 / 否，已请用户 rsync>
+阶段1：
+  docker compose ps = <粘贴>
+  jf=<code>  front=<code>
+  异常日志 = <无 / 摘录>
+阶段2：
+  已把 Jellyfin 设置清单发回用户，等 Key / userId
+阶段3（若已拿到值）：
+  config.json 已写（key 打码）
+  restart web = <ok>
+  proxy=<code>   /config.json 回显 = <ok>
+  访问地址：http://<NAS内网IP>:8080/
+下一步 / 卡点：<...>
 ```
 
 ---
 
 ## 明确不要做
 
-- 不修改 / 迁移 / 删除现有 Jellyfin 的任何数据或配置
-- 不加 `--profile bundled`（不要再起第二个 Jellyfin）
-- 不映射端口到公网、不配端口转发 / DDNS
-- 不改动 `src/` 代码；只按上面写 `.env` 两个文件
-- 遇到需要抉择或缺信息 → 停下回报，不要猜
+- 不加公网端口转发 / DDNS / UPnP；只在局域网可达
+- 不改 `src/`；只写 `deploy/.env` 和 `deploy/config.json` 两个文件
+- 不删除 / 覆盖 NAS 上已有的其它数据
+- `docker compose` 必须带 `--profile bundled`（否则不起 Jellyfin）
+- 缺信息或要做选择 → 停下回报
 
 ## 回滚
 
 ```bash
-cd /Users/dokwan/childvideo/deploy && docker compose down
+cd <WORKDIR>/deploy && docker compose --profile bundled down
 ```
 
-只删 `cv-web` 容器，其它一概不动。
+容器删除，`deploy/media`、`deploy/jellyfin/` 里的数据保留。

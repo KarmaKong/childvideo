@@ -1,0 +1,4 @@
+{
+  "_comment": "运行时配置。留空 {} 表示全部用 .env / 默认值。部署时用 deploy/config.json 覆盖本文件。",
+  "source": "static"
+}

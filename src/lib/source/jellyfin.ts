@@ -1,18 +1,36 @@
+import { runtimeConfig } from '../../runtime-config'
 import type { Catalog, Category, Video } from '../../types'
 import type { CatalogSource, Playback } from './types'
 
-// ---- 配置（来自 .env） ----
-const BASE = (import.meta.env.VITE_JELLYFIN_BASE ?? '').trim().replace(/\/+$/, '')
-const KEY = (import.meta.env.VITE_JELLYFIN_KEY ?? '').trim()
-const USER_ID = (import.meta.env.VITE_JELLYFIN_USER_ID ?? '').trim()
-const LIBRARY_ID = (import.meta.env.VITE_JELLYFIN_LIBRARY_ID ?? '').trim()
-const CATEGORY_MODE = (import.meta.env.VITE_JELLYFIN_CATEGORY_MODE ?? 'genre').trim() as
-  | 'genre'
-  | 'collection'
-const STREAM = (import.meta.env.VITE_JELLYFIN_STREAM ?? 'direct').trim() as 'direct' | 'hls'
+// ---- 配置：优先 config.json 的 jellyfin.*，回退 import.meta.env.VITE_JELLYFIN_* ----
+interface JfCfg {
+  base: string
+  key: string
+  userId: string
+  libraryId: string
+  categoryMode: 'genre' | 'collection'
+  stream: 'direct' | 'hls'
+}
+
+function jf(): JfCfg {
+  const rc = runtimeConfig().jellyfin ?? {}
+  const pick = (a: string | undefined, b: string | undefined) => (a ?? b ?? '').trim()
+  return {
+    base: pick(rc.base, import.meta.env.VITE_JELLYFIN_BASE).replace(/\/+$/, ''),
+    key: pick(rc.key, import.meta.env.VITE_JELLYFIN_KEY),
+    userId: pick(rc.userId, import.meta.env.VITE_JELLYFIN_USER_ID),
+    libraryId: pick(rc.libraryId, import.meta.env.VITE_JELLYFIN_LIBRARY_ID),
+    categoryMode: (pick(rc.categoryMode, import.meta.env.VITE_JELLYFIN_CATEGORY_MODE) ||
+      'genre') as 'genre' | 'collection',
+    stream: (pick(rc.stream, import.meta.env.VITE_JELLYFIN_STREAM) || 'direct') as
+      | 'direct'
+      | 'hls',
+  }
+}
 
 export function jellyfinConfigured(): boolean {
-  return Boolean(BASE && KEY && USER_ID)
+  const c = jf()
+  return Boolean(c.base && c.key && c.userId)
 }
 
 const TICKS = 1e7 // 1 秒 = 10,000,000 ticks
@@ -38,16 +56,16 @@ function deviceId(): string {
 }
 
 function authHeader(): string {
-  return `MediaBrowser Token="${KEY}", Client="XiaoXiaoCinema", Device="Web", DeviceId="${deviceId()}", Version="1.0"`
+  return `MediaBrowser Token="${jf().key}", Client="XiaoXiaoCinema", Device="Web", DeviceId="${deviceId()}", Version="1.0"`
 }
 
 function api(path: string): string {
-  return `${BASE}${path}`
+  return `${jf().base}${path}`
 }
 
 async function getJson<T>(path: string): Promise<T> {
   const r = await fetch(api(path), {
-    headers: { Authorization: authHeader(), 'X-Emby-Token': KEY },
+    headers: { Authorization: authHeader(), 'X-Emby-Token': jf().key },
   })
   if (!r.ok) throw new Error(`Jellyfin ${path} -> ${r.status}`)
   return (await r.json()) as T
@@ -59,7 +77,7 @@ function post(path: string, body: unknown, keepalive = false): void {
     keepalive,
     headers: {
       Authorization: authHeader(),
-      'X-Emby-Token': KEY,
+      'X-Emby-Token': jf().key,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(body),
@@ -120,8 +138,9 @@ export class JellyfinSource implements CatalogSource {
   private session: { itemId: string; playSessionId: string } | null = null
 
   private async parentIds(): Promise<string[]> {
-    if (LIBRARY_ID) return [LIBRARY_ID]
-    const views = await getJson<{ Items: JfView[] }>(`/Users/${USER_ID}/Views`)
+    const c = jf()
+    if (c.libraryId) return [c.libraryId]
+    const views = await getJson<{ Items: JfView[] }>(`/Users/${c.userId}/Views`)
     return views.Items.map((v) => v.Id)
   }
 
@@ -140,7 +159,7 @@ export class JellyfinSource implements CatalogSource {
       title,
       category,
       src: it.Id,
-      kind: STREAM === 'hls' ? 'hls' : 'mp4',
+      kind: jf().stream === 'hls' ? 'hls' : 'mp4',
       duration: it.RunTimeTicks ? Math.round(it.RunTimeTicks / TICKS) : undefined,
       series: it.SeriesId ?? it.SeriesName ?? derived.series,
       episode: it.IndexNumber ?? derived.episode,
@@ -150,8 +169,9 @@ export class JellyfinSource implements CatalogSource {
 
   async loadCatalog(): Promise<Catalog> {
     if (!jellyfinConfigured())
-      throw new Error('Jellyfin 未配置：请检查 VITE_JELLYFIN_BASE / KEY / USER_ID')
+      throw new Error('Jellyfin 未配置：请检查 config.json 的 jellyfin.base / key / userId')
 
+    const c = jf()
     const parents = await this.parentIds()
     this.meta.clear()
 
@@ -161,17 +181,17 @@ export class JellyfinSource implements CatalogSource {
       if (!catOrder.includes(name)) catOrder.push(name)
     }
 
-    if (CATEGORY_MODE === 'collection') {
+    if (c.categoryMode === 'collection') {
       // 分类 = 合集(BoxSet)；不属于任何合集的归入「精选」
       for (const pid of parents) {
         const sets = await getJson<JfItemsResp>(
-          `/Users/${USER_ID}/Items?ParentId=${pid}&IncludeItemTypes=BoxSet&Recursive=true`,
+          `/Users/${c.userId}/Items?ParentId=${pid}&IncludeItemTypes=BoxSet&Recursive=true`,
         )
         const claimed = new Set<string>()
         for (const set of sets.Items) {
           addCat(set.Name)
           const children = await getJson<JfItemsResp>(
-            `/Users/${USER_ID}/Items?ParentId=${set.Id}&Fields=${FIELDS}&SortBy=SortName`,
+            `/Users/${c.userId}/Items?ParentId=${set.Id}&Fields=${FIELDS}&SortBy=SortName`,
           )
           for (const it of children.Items) {
             claimed.add(it.Id)
@@ -179,7 +199,7 @@ export class JellyfinSource implements CatalogSource {
           }
         }
         const all = await getJson<JfItemsResp>(
-          `/Users/${USER_ID}/Items?ParentId=${pid}&Recursive=true&IncludeItemTypes=Movie,Episode,Video&Fields=${FIELDS}&SortBy=SeriesSortName,SortName`,
+          `/Users/${c.userId}/Items?ParentId=${pid}&Recursive=true&IncludeItemTypes=Movie,Episode,Video&Fields=${FIELDS}&SortBy=SeriesSortName,SortName`,
         )
         for (const it of all.Items) {
           if (claimed.has(it.Id)) continue
@@ -191,7 +211,7 @@ export class JellyfinSource implements CatalogSource {
       // 分类 = 第一个 Genre（入库 CLI 会写成分类名）；无 Genre 归入「精选」
       for (const pid of parents) {
         const resp = await getJson<JfItemsResp>(
-          `/Users/${USER_ID}/Items?ParentId=${pid}&Recursive=true&IncludeItemTypes=Movie,Episode,Video&Fields=${FIELDS}&SortBy=SeriesSortName,SortName&SortOrder=Ascending&ImageTypeLimit=1&EnableImageTypes=Primary`,
+          `/Users/${c.userId}/Items?ParentId=${pid}&Recursive=true&IncludeItemTypes=Movie,Episode,Video&Fields=${FIELDS}&SortBy=SeriesSortName,SortName&SortOrder=Ascending&ImageTypeLimit=1&EnableImageTypes=Primary`,
         )
         for (const it of resp.Items) {
           const cat = it.Genres?.[0] ?? '精选'
@@ -214,13 +234,14 @@ export class JellyfinSource implements CatalogSource {
   }
 
   resolvePlayback(video: Video): Playback {
+    const c = jf()
     this.session = {
       itemId: video.id,
       playSessionId: `${deviceId()}-${Date.now()}`,
     }
-    if (STREAM === 'hls') {
+    if (c.stream === 'hls') {
       const q = new URLSearchParams({
-        api_key: KEY,
+        api_key: c.key,
         MediaSourceId: video.id,
         DeviceId: deviceId(),
         PlaySessionId: this.session.playSessionId,
@@ -232,7 +253,7 @@ export class JellyfinSource implements CatalogSource {
       return { src: api(`/Videos/${video.id}/master.m3u8?${q}`), kind: 'hls' }
     }
     const q = new URLSearchParams({
-      api_key: KEY,
+      api_key: c.key,
       static: 'true',
       MediaSourceId: video.id,
     })
@@ -242,7 +263,7 @@ export class JellyfinSource implements CatalogSource {
   resolvePoster(video: Video): string | null {
     const tag = this.meta.get(video.id)?.primaryTag
     if (!tag) return null
-    const q = new URLSearchParams({ fillWidth: '480', quality: '90', tag, api_key: KEY })
+    const q = new URLSearchParams({ fillWidth: '480', quality: '90', tag, api_key: jf().key })
     return api(`/Items/${video.id}/Images/Primary?${q}`)
   }
 
@@ -250,7 +271,7 @@ export class JellyfinSource implements CatalogSource {
     const cached = this.meta.get(video.id)?.resumeSec
     if (cached != null) return cached > 5 ? cached : null
     try {
-      const it = await getJson<JfItem>(`/Users/${USER_ID}/Items/${video.id}`)
+      const it = await getJson<JfItem>(`/Users/${jf().userId}/Items/${video.id}`)
       const sec = (it.UserData?.PlaybackPositionTicks ?? 0) / TICKS
       return sec > 5 ? sec : null
     } catch {
@@ -264,7 +285,7 @@ export class JellyfinSource implements CatalogSource {
       ItemId: video.id,
       PlaySessionId: this.session?.playSessionId,
       PositionTicks: Math.round(positionSec * TICKS),
-      PlayMethod: STREAM === 'hls' ? 'Transcode' : 'DirectStream',
+      PlayMethod: jf().stream === 'hls' ? 'Transcode' : 'DirectStream',
       CanSeek: true,
     })
   }
@@ -275,7 +296,7 @@ export class JellyfinSource implements CatalogSource {
       PlaySessionId: this.session?.playSessionId,
       PositionTicks: Math.round(positionSec * TICKS),
       IsPaused: paused,
-      PlayMethod: STREAM === 'hls' ? 'Transcode' : 'DirectStream',
+      PlayMethod: jf().stream === 'hls' ? 'Transcode' : 'DirectStream',
       CanSeek: true,
       EventName: 'timeupdate',
     })

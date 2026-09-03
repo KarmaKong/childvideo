@@ -1,0 +1,12 @@
+node_modules
+dist
+.git
+deploy/media
+deploy/jellyfin
+deploy/config.json
+deploy/.env
+.env
+.env.*
+tools/ingest/.ingestrc.json
+*.log
+.DS_Store

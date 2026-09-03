@@ -1,0 +1,16 @@
+# cv-web：多阶段构建 —— 阶段一用 Node 打包前端，阶段二只留 nginx + dist。
+# NAS 上无需装 Node：docker compose --build 会在容器里完成构建。
+# build context = 仓库根目录（compose 里 context: ..）
+
+FROM node:20-alpine AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM nginx:1.27-alpine
+# 前端静态产物
+COPY --from=build /app/dist /usr/share/nginx/html
+# nginx.conf.template 和 config.json 仍由 compose 以只读挂载注入，
+# 方便改配置 / 改 Jellyfin Key 后无需重建镜像。

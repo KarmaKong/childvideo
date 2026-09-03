@@ -1,0 +1,12 @@
+{
+  "source": "jellyfin",
+  "appName": "小小影院",
+  "jellyfin": {
+    "base": "/jf",
+    "key": "在这里粘贴 Jellyfin API Key",
+    "userId": "在这里粘贴 kid 用户 ID",
+    "libraryId": "",
+    "categoryMode": "genre",
+    "stream": "direct"
+  }
+}

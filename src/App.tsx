@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { APP_NAME } from './config'
+import { appName } from './config'
 import ParentalGate from './components/ParentalGate'
 import { useSettingsStore } from './store/useSettingsStore'
 import { useProgressStore } from './store/useProgressStore'
@@ -21,7 +21,7 @@ export default function App() {
       <header className="sticky top-0 z-20 flex items-center gap-2 bg-kid-bg/90 px-3 py-3 backdrop-blur">
         <Link to="/" className="flex shrink-0 items-center gap-1.5 text-lg font-extrabold whitespace-nowrap">
           <span className="text-2xl">🎬</span>
-          {APP_NAME}
+          {appName()}
         </Link>
         <div className="ml-auto flex items-center gap-2">
           {dailyLimitMin > 0 && Number.isFinite(remaining) && (
