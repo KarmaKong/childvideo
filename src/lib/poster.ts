@@ -1,13 +1,13 @@
 // 没有封面图时，用标题生成一个稳定的彩色 SVG 占位图（data URI，无外部请求）。
 // 幼儿向：大色块渐变 + 一个简单友好的形状，不用文字。
-// LUMO 双色：钴蓝 / 琥珀 / 青绿 / 紫 / 午夜蓝 / 爆米花红
+// LUMO 双色占位：明亮、柔和，不出深色。蓝 / 黄 / 薄荷 / 珊瑚 / 淡蓝
 const PAIRS: [string, string][] = [
-  ['#2E6BE6', '#FFC02E'],
-  ['#1E3A7A', '#3FA7F0'],
-  ['#37B58A', '#FFC02E'],
-  ['#7C5CE0', '#2E6BE6'],
-  ['#FFC02E', '#E8433B'],
-  ['#141A2E', '#2E6BE6'],
+  ['#2F8CF4', '#7FC0FF'],
+  ['#FFC541', '#FFD98A'],
+  ['#84D7BD', '#B9ECDC'],
+  ['#FF8748', '#FFB48A'],
+  ['#2F8CF4', '#84D7BD'],
+  ['#FFC541', '#FF8748'],
 ]
 
 function hash(str: string): number {
@@ -18,15 +18,15 @@ function hash(str: string): number {
 
 const SHAPES = [
   // circle
-  `<circle cx="240" cy="135" r="66" fill="rgba(255,255,255,.9)"/>`,
+  `<circle cx="240" cy="135" r="66" fill="rgba(255,255,255,.55)"/>`,
   // heart
-  `<path d="M240 178c-40-26-64-46-64-74a30 30 0 0 1 56-15 30 30 0 0 1 56 15c0 28-24 48-48 74z" fill="rgba(255,255,255,.9)"/>`,
+  `<path d="M240 178c-40-26-64-46-64-74a30 30 0 0 1 56-15 30 30 0 0 1 56 15c0 28-24 48-48 74z" fill="rgba(255,255,255,.55)"/>`,
   // star
-  `<path d="M240 70l19 40 44 6-32 31 8 44-39-21-39 21 8-44-32-31 44-6z" fill="rgba(255,255,255,.9)"/>`,
+  `<path d="M240 70l19 40 44 6-32 31 8 44-39-21-39 21 8-44-32-31 44-6z" fill="rgba(255,255,255,.55)"/>`,
   // cloud
-  `<path d="M196 158a28 28 0 0 1 4-56 40 40 0 0 1 78-6 26 26 0 0 1 2 62z" fill="rgba(255,255,255,.9)"/>`,
+  `<path d="M196 158a28 28 0 0 1 4-56 40 40 0 0 1 78-6 26 26 0 0 1 2 62z" fill="rgba(255,255,255,.55)"/>`,
   // rounded square
-  `<rect x="188" y="82" width="104" height="104" rx="26" fill="rgba(255,255,255,.9)"/>`,
+  `<rect x="188" y="82" width="104" height="104" rx="26" fill="rgba(255,255,255,.55)"/>`,
 ]
 
 export function placeholderPoster(title: string): string {

@@ -1,86 +1,135 @@
 /** @type {import('tailwindcss').Config} */
-// LUMO Box 配色：取自 logo —— 琥珀黄（猫）、钴蓝（沙发）、深蓝黑（平板屏）、暖白、爆米花红。
-// 主题：午夜蓝放映间 + 琥珀光。
+// LUMO Box Design System —— tokens 见 src/design/tokens.ts，此处为 Tailwind 镜像。
+// 「孩子自己的小小放映厅」：round / soft / bright / spacious / calm。
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
       fontFamily: {
-        round: [
+        sans: [
+          '"Nunito Variable"',
+          'Nunito',
           '-apple-system',
           'BlinkMacSystemFont',
           '"PingFang SC"',
           '"HarmonyOS Sans SC"',
+          '"Noto Sans SC"',
           '"Microsoft YaHei"',
-          '"Segoe UI Rounded"',
+          'system-ui',
+          'sans-serif',
+        ],
+        round: [
+          '"Nunito Variable"',
+          'Nunito',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          '"PingFang SC"',
+          '"HarmonyOS Sans SC"',
+          '"Noto Sans SC"',
           'system-ui',
           'sans-serif',
         ],
       },
+      fontSize: {
+        caption: ['14px', { lineHeight: '1.5', fontWeight: '500' }],
+        body: ['16px', { lineHeight: '1.6', fontWeight: '500' }],
+        card: ['17px', { lineHeight: '1.4', fontWeight: '600' }],
+        'card-lg': ['18px', { lineHeight: '1.4', fontWeight: '600' }],
+        section: ['21px', { lineHeight: '1.3', fontWeight: '700' }],
+        'page-title': ['28px', { lineHeight: '1.2', fontWeight: '700' }],
+        display: ['32px', { lineHeight: '1.15', fontWeight: '700' }],
+      },
       colors: {
         lumo: {
-          amber: '#FFC02E',
-          'amber-deep': '#F0A012',
-          blue: '#2E6BE6',
-          'blue-deep': '#1E3A7A',
-          ground: '#101733', // 全站深底（放映间午夜蓝）
-          card: '#1B274C', // 深底上的卡片/色块
-          night: '#141A2E', // 播放器底 / 深色文字（偏蓝的炭黑）
-          cream: '#FFF7EC', // 浅色面（家长设置、弹窗）
+          blue: '#2F8CF4',
+          'blue-ink': '#1F6FD0',
+          yellow: '#FFC541',
+          cream: '#FFF9ED',
           paper: '#FFFFFF',
-          sand: '#EFE6D6', // 浅色上的分隔线
-          red: '#E8433B', // 爆米花红，仅用于告警/时间到
+          'soft-blue': '#DCEFFF',
+          cocoa: '#211A16',
+          coral: '#FF8748',
+          mint: '#84D7BD',
+          red: '#EF5B52',
+          // 迁移期别名（旧页面还在用，STEP 5–7 会清掉）
+          night: '#211A16',
+          ink: '#211A16',
+          amber: '#FFC541',
         },
-        // ---- 旧 token 重新指向新配色，老 class 自动换肤 ----
-        cream: '#FFF7EC',
-        ink: '#141A2E',
-        night: '#101733',
+        // ---- 旧 token 重新指向 LUMO，老 class 自动换肤，页面逐步迁移 ----
+        cream: '#FFF9ED',
+        ink: '#211A16',
+        night: '#FFF9ED',
         candy: {
-          coral: '#2E6BE6', // 主结构色（蓝）：按钮、链接，白字可用
-          sky: '#3FA7F0',
-          grass: '#37B58A',
-          grape: '#7C5CE0',
-          sun: '#FFC02E', // 琥珀：播放键、进度、发光，配深色字
-          bubble: '#E8433B',
+          coral: '#2F8CF4',
+          sky: '#2F8CF4',
+          grass: '#84D7BD',
+          grape: '#FF8748',
+          sun: '#FFC541',
+          bubble: '#FF8748',
         },
         kid: {
-          bg: '#101733',
-          card: '#1B274C',
-          primary: '#2E6BE6',
-          accent: '#FFC02E',
-          green: '#37B58A',
-          purple: '#7C5CE0',
+          bg: '#FFF9ED',
+          card: '#FFFFFF',
+          primary: '#2F8CF4',
+          accent: '#FFC541',
+          green: '#84D7BD',
+          purple: '#FF8748',
         },
       },
       borderRadius: {
-        blob: '1.75rem',
+        sm: '12px',
+        md: '16px',
+        card: '20px',
+        video: '24px',
+        panel: '28px',
+        hero: '32px',
+        blob: '24px', // 旧别名 → video
         pill: '999px',
       },
       boxShadow: {
-        toy: '0 10px 0 -2px rgba(4,8,22,0.28), 0 20px 34px -14px rgba(4,8,22,0.55)',
-        toysm: '0 6px 0 -2px rgba(4,8,22,0.24), 0 14px 22px -12px rgba(4,8,22,0.5)',
-        glow: '0 0 0 4px rgba(255,192,46,0.22), 0 10px 26px -8px rgba(255,192,46,0.4)',
+        sm: '0 4px 12px rgba(35,75,120,0.06)',
+        md: '0 8px 24px rgba(35,75,120,0.08)',
+        floating: '0 12px 32px rgba(35,75,120,0.10)',
+        // 旧别名
+        toy: '0 12px 32px rgba(35,75,120,0.10)',
+        toysm: '0 8px 24px rgba(35,75,120,0.08)',
+        glow: '0 0 0 4px rgba(255,197,65,0.28)',
+      },
+      transitionTimingFunction: {
+        lumo: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
       },
       keyframes: {
+        'lumo-in': {
+          '0%': { opacity: '0', transform: 'translateY(8px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        breathe: {
+          '0%,100%': { transform: 'scale(1)' },
+          '50%': { transform: 'scale(1.02)' },
+        },
+        blink: {
+          '0%,92%,100%': { transform: 'scaleY(1)' },
+          '96%': { transform: 'scaleY(0.1)' },
+        },
+        // 旧别名保留（页面迁移前不炸）
         pop: {
-          '0%': { transform: 'scale(0.8)', opacity: '0' },
-          '70%': { transform: 'scale(1.04)', opacity: '1' },
-          '100%': { transform: 'scale(1)', opacity: '1' },
+          '0%': { opacity: '0', transform: 'translateY(8px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
         },
         bloom: {
-          '0%': { transform: 'scale(0.4)', opacity: '0' },
-          '60%': { transform: 'scale(1.15)', opacity: '1' },
+          '0%': { transform: 'scale(0.9)', opacity: '0' },
           '100%': { transform: 'scale(1)', opacity: '1' },
         },
-        wiggle: {
-          '0%,100%': { transform: 'rotate(-3deg)' },
-          '50%': { transform: 'rotate(3deg)' },
-        },
+        wiggle: { '0%,100%': { transform: 'rotate(-2deg)' }, '50%': { transform: 'rotate(2deg)' } },
       },
       animation: {
-        pop: 'pop 260ms cubic-bezier(.34,1.56,.64,1) both',
-        bloom: 'bloom 220ms cubic-bezier(.34,1.56,.64,1) both',
-        wiggle: 'wiggle 500ms ease-in-out infinite',
+        'lumo-in': 'lumo-in 300ms cubic-bezier(0.22,0.61,0.36,1) both',
+        breathe: 'breathe 4s ease-in-out infinite',
+        blink: 'blink 5s ease-in-out infinite',
+        pop: 'lumo-in 260ms cubic-bezier(0.22,0.61,0.36,1) both',
+        bloom: 'bloom 200ms cubic-bezier(0.22,0.61,0.36,1) both',
+        wiggle: 'wiggle 600ms ease-in-out infinite',
       },
     },
   },

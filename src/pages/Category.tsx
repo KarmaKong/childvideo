@@ -22,7 +22,7 @@ export default function CategoryPage() {
 
   if (!catalog)
     return (
-      <p className="cinema-bg min-h-screen p-16 text-center text-lg font-black text-white/40">
+      <p className="cinema-bg min-h-screen p-16 text-center text-lg font-black text-lumo-cocoa/40">
         加载中…
       </p>
     )
@@ -66,9 +66,9 @@ export default function CategoryPage() {
       </div>
 
       {!allowed ? (
-        <p className="p-16 text-center font-black text-white/40">这个分类被藏起来啦</p>
+        <p className="p-16 text-center font-black text-lumo-cocoa/40">这个分类被藏起来啦</p>
       ) : vids.length === 0 ? (
-        <p className="p-16 text-center font-black text-white/40">
+        <p className="p-16 text-center font-black text-lumo-cocoa/40">
           {isFav ? '还没有收藏，点视频右上角小星星试试吧' : '这里还没有视频'}
         </p>
       ) : (
