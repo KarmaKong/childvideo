@@ -3,6 +3,8 @@ export { default as LumoLogo } from './Logo'
 export { PrimaryButton, SecondaryButton, AmberButton, IconButton } from './Button'
 export {
   SectionHeader,
+  Panel,
+  CategoryTile,
   CategoryChip,
   DurationBadge,
   ProgressBar,
@@ -10,4 +12,4 @@ export {
   SearchBar,
 } from './primitives'
 export { LoadingState, EmptyState, Modal } from './Feedback'
-export { VideoCard, VideoGrid, VideoRail, ContinueWatchingCard } from './VideoCard'
+export { VideoCard, VideoGrid, VideoRow } from './VideoCard'

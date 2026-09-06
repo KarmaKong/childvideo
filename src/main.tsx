@@ -7,6 +7,7 @@ import App from './App'
 import Home from './pages/Home'
 import Discover from './pages/Discover'
 import Learn from './pages/Learn'
+import Vip from './pages/Vip'
 import Profile from './pages/Profile'
 import CategoryPage from './pages/Category'
 import Player from './pages/Player'
@@ -21,7 +22,9 @@ const router = createBrowserRouter(
         { index: true, element: <Home /> },
         { path: 'discover', element: <Discover /> },
         { path: 'learn', element: <Learn /> },
+        { path: 'vip', element: <Vip /> },
         { path: 'me', element: <Profile /> },
+        { path: 'search', element: <Discover /> },
         { path: 'c/:categoryId', element: <CategoryPage /> },
         { path: 'watch/:videoId', element: <Player /> },
         { path: 'parent', element: <ParentSettings /> },
@@ -31,7 +34,6 @@ const router = createBrowserRouter(
   { basename: import.meta.env.BASE_URL.replace(/\/$/, '') || '/' },
 )
 
-// 先拉运行时配置，再渲染（数据源工厂依赖它）
 initRuntimeConfig().finally(() => {
   ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>

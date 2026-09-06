@@ -4,17 +4,31 @@ import { sourceMode } from '../lib/source'
 import TopBar from '../components/TopBar'
 import {
   SectionHeader,
-  VideoRail,
-  ContinueWatchingCard,
+  Panel,
+  CategoryTile,
+  VideoRow,
   LoadingState,
   EmptyState,
 } from '../components/lumo'
-import { SparkIcon, CartoonIcon, LearnIcon, ClockIcon } from '../components/icons'
+import { SparkIcon } from '../components/icons'
 import { isCategoryAllowed, useSettingsStore } from '../store/useSettingsStore'
 import { useProgressStore } from '../store/useProgressStore'
 import type { Video } from '../types'
 
-const LEARN_CATS = ['science', '科普', 'english', '英语', 'learn', '学习']
+const CAT_EMOJI: Record<string, string> = {
+  动画: '🎬',
+  cartoon: '🎬',
+  儿歌: '🎵',
+  nursery: '🎵',
+  英语: '🔤',
+  english: '🔤',
+  科普: '🔬',
+  science: '🔬',
+  益智: '🧩',
+  故事: '📖',
+  story: '📖',
+}
+const TINT_CYCLE = ['coral', 'blue', 'purple', 'green', 'yellow', 'purple', 'coral']
 
 export default function Home() {
   const nav = useNavigate()
@@ -45,85 +59,82 @@ export default function Home() {
   const byId = new Map(catalog.videos.map((v) => [v.id, v]))
   const recent = history.map((id) => byId.get(id)).filter((v): v is Video => !!v && visible(v))
 
-  // Continue Watching：最近一条且有真实进度
-  const hero = recent.find((v) => {
+  // 为你推荐：优先「有进度、没看完」的，再补新的
+  const inProgress = recent.filter((v) => {
     const e = progress[v.id]
     return e && e.position > 5 && e.duration > 0 && e.position < e.duration - 10
   })
+  const fill = all.filter((v) => !inProgress.some((r) => r.id === v.id)).slice(0, 8)
+  const recommend = [...inProgress, ...fill].slice(0, 10)
 
-  const picks = [...all].sort((a, b) => (a.id > b.id ? 1 : -1)).slice(0, 6)
-  const cartoonCat = catalog.categories.find(
-    (c) => isCategoryAllowed(settings, c.id) && /cartoon|动画/i.test(c.id + c.name),
+  const cats = catalog.categories.filter(
+    (c) => isCategoryAllowed(settings, c.id) && all.some((v) => v.category === c.id),
   )
-  const cartoons = cartoonCat ? all.filter((v) => v.category === cartoonCat.id) : []
-  const learnCat = catalog.categories.find(
-    (c) => isCategoryAllowed(settings, c.id) && LEARN_CATS.some((k) => (c.id + c.name).includes(k)),
-  )
-  const learn = learnCat ? all.filter((v) => v.category === learnCat.id) : []
 
   if (all.length === 0)
     return (
       <>
         <TopBar />
-        <EmptyState pose="box" title="片库还是空的" hint="家长在片库里加几个视频就好啦" />
+        <div className="px-4 sm:px-5">
+          <EmptyState pose="box" title="片库还是空的" hint="家长在片库里加几个视频就好啦" />
+        </div>
       </>
     )
 
   return (
-    <div className="flex flex-col gap-7 pb-4">
+    <div className="flex flex-col gap-4 pb-4">
       <TopBar />
 
-      {hero && (
-        <section>
-          <ContinueWatchingCard video={hero} />
-        </section>
-      )}
-
-      {recent.length > 0 && (
-        <section>
-          <SectionHeader title="最近看过" icon={<ClockIcon className="h-5 w-5 text-lumo-blue" />} />
-          <div className="mt-3">
-            <VideoRail videos={recent.slice(0, 8)} />
-          </div>
-        </section>
-      )}
-
-      <section>
-        <SectionHeader
-          title="今日推荐"
-          icon={<SparkIcon className="h-5 w-5 text-lumo-yellow" />}
-          onMore={() => nav('/discover')}
-        />
-        <div className="mt-3">
-          <VideoRail videos={picks} />
-        </div>
-      </section>
-
-      {cartoons.length > 0 && (
-        <section>
+      <div className="flex flex-col gap-4 px-4 sm:px-5">
+        <Panel>
           <SectionHeader
-            title="动画片"
-            icon={<CartoonIcon className="h-5 w-5 text-lumo-coral" />}
-            onMore={() => cartoonCat && nav(`/c/${cartoonCat.id}`)}
+            title="为你推荐"
+            icon={<SparkIcon className="h-5 w-5 text-lumo-yellow" />}
+            onMore={() => nav('/discover')}
+            className="mb-3"
           />
-          <div className="mt-3">
-            <VideoRail videos={cartoons.slice(0, 8)} />
-          </div>
-        </section>
-      )}
+          <VideoRow videos={recommend} />
+        </Panel>
 
-      {learn.length > 0 && (
-        <section>
-          <SectionHeader
-            title="学点新东西"
-            icon={<LearnIcon className="h-5 w-5 text-lumo-mint" />}
-            onMore={() => learnCat && nav(`/c/${learnCat.id}`)}
-          />
-          <div className="mt-3">
-            <VideoRail videos={learn.slice(0, 8)} />
-          </div>
-        </section>
-      )}
+        {cats.length > 0 && (
+          <Panel>
+            <SectionHeader
+              title="热门分类"
+              icon={<SparkIcon className="h-5 w-5 text-lumo-yellow" />}
+              onMore={() => nav('/discover')}
+              className="mb-3"
+            />
+            <div className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <CategoryTile label="全部" emoji="🗂️" tint="blue" onClick={() => nav('/discover')} />
+              {cats.map((c, i) => (
+                <CategoryTile
+                  key={c.id}
+                  label={c.name}
+                  emoji={CAT_EMOJI[c.id] || CAT_EMOJI[c.name] || c.icon || '🎈'}
+                  tint={TINT_CYCLE[i % TINT_CYCLE.length]}
+                  onClick={() => nav(`/c/${c.id}`)}
+                />
+              ))}
+            </div>
+          </Panel>
+        )}
+
+        {cats.map((c) => {
+          const vids = all.filter((v) => v.category === c.id)
+          if (vids.length === 0) return null
+          return (
+            <Panel key={c.id}>
+              <SectionHeader
+                title={c.name}
+                icon={<span className="text-xl leading-none">{c.icon}</span>}
+                onMore={() => nav(`/c/${c.id}`)}
+                className="mb-3"
+              />
+              <VideoRow videos={vids.slice(0, 12)} />
+            </Panel>
+          )
+        })}
+      </div>
     </div>
   )
 }

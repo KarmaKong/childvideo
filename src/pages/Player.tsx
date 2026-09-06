@@ -1,23 +1,29 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { getSource } from '../lib/source'
 import { findVideo, nextInSeries, useCatalog } from '../lib/catalog'
 import { placeholderPoster } from '../lib/poster'
 import { checkPlaybackAllowed, type BlockReason } from '../lib/guard'
 import {
-  Back10,
   ChevLeft,
   Expand,
-  Fwd10,
   Lock,
   Pause,
   Play,
   Replay,
   Star,
   StarLine,
+  EpisodesIcon,
+  SpeedIcon,
+  TimerIcon,
+  SubtitleIcon,
 } from '../components/icons'
+import { Modal } from '../components/lumo/Feedback'
 import { useSettingsStore } from '../store/useSettingsStore'
 import { useProgressStore } from '../store/useProgressStore'
+
+const RATES = [1, 1.5, 2] as const
+const TIMERS = [0, 15, 30] as const
 
 function fmt(t: number): string {
   if (!Number.isFinite(t)) return '0:00'
@@ -51,6 +57,18 @@ export default function Player() {
   const [showUI, setShowUI] = useState(true)
   const [ended, setEnded] = useState(false)
   const [block, setBlock] = useState<BlockReason>({ blocked: false })
+  const [rate, setRate] = useState(1)
+  const [sleepMin, setSleepMin] = useState(0)
+  const [sheet, setSheet] = useState<null | 'eps'>(null)
+  const [subsOn, setSubsOn] = useState(false)
+  const sleepTimer = useRef<number | undefined>(undefined)
+
+  const episodes = useMemo(() => {
+    if (!catalog || !video?.series) return []
+    return catalog.videos
+      .filter((v) => v.series === video.series)
+      .sort((a, b) => (a.episode ?? 0) - (b.episode ?? 0))
+  }, [catalog, video])
 
   const lastTick = useRef<number | null>(null)
   const uiTimer = useRef<number | undefined>(undefined)
@@ -255,13 +273,6 @@ export default function Player() {
     el.paused ? el.play() : el.pause()
     pokeUI()
   }
-  function seek(delta: number) {
-    const el = videoRef.current
-    if (!el) return
-    el.currentTime = Math.max(0, Math.min((el.duration || 0) - 1, el.currentTime + delta))
-    lastTick.current = el.currentTime
-    pokeUI()
-  }
   function seekTo(e: ChangeEvent<HTMLInputElement>) {
     const el = videoRef.current
     if (!el) return
@@ -277,6 +288,37 @@ export default function Player() {
     if (document.fullscreenElement) document.exitFullscreen()
     else el.requestFullscreen?.()
   }
+
+  // 倍速
+  function cycleRate() {
+    const nextRate = RATES[(RATES.indexOf(rate as (typeof RATES)[number]) + 1) % RATES.length]
+    setRate(nextRate)
+    if (videoRef.current) videoRef.current.playbackRate = nextRate
+    pokeUI()
+  }
+  // 定时（到点暂停）
+  function cycleSleep() {
+    const nextT = TIMERS[(TIMERS.indexOf(sleepMin as (typeof TIMERS)[number]) + 1) % TIMERS.length]
+    setSleepMin(nextT)
+    window.clearTimeout(sleepTimer.current)
+    if (nextT > 0) {
+      sleepTimer.current = window.setTimeout(() => {
+        videoRef.current?.pause()
+        setSleepMin(0)
+      }, nextT * 60_000)
+    }
+    pokeUI()
+  }
+  // 字幕
+  function toggleSubs() {
+    const el = videoRef.current
+    if (!el || !el.textTracks.length) return
+    const on = !subsOn
+    for (const t of Array.from(el.textTracks)) t.mode = on ? 'showing' : 'hidden'
+    setSubsOn(on)
+    pokeUI()
+  }
+  useEffect(() => () => window.clearTimeout(sleepTimer.current), [])
 
   // 锁屏：长按 1.5s 解锁
   const unlockTimer = useRef<number | undefined>(undefined)
@@ -397,28 +439,36 @@ export default function Player() {
           onMouseMove={pokeUI}
           onClick={pokeUI}
         >
-          {/* 顶部 */}
-          <div className="flex items-center gap-3 bg-gradient-to-b from-black/70 to-transparent p-4">
-            <button className="btn-round h-12 w-12 shrink-0" onClick={() => nav('/')} aria-label="返回">
+          {/* 顶部：返回 / 收藏 / 锁 */}
+          <div className="flex items-center gap-3 bg-gradient-to-b from-black/60 to-transparent p-4">
+            <button
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-black/35 text-white active:scale-95"
+              onClick={() => nav('/')}
+              aria-label="返回"
+            >
               <ChevLeft className="h-6 w-6" />
             </button>
-            <span className="line-clamp-1 rounded-pill bg-black/35 px-3 py-1.5 text-sm font-extrabold text-white">
+            <span className="line-clamp-1 text-body font-bold text-white/90 drop-shadow">
               {video?.title}
             </span>
             <div className="ml-auto flex shrink-0 gap-2">
               <button
-                className="btn-round h-12 w-12"
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-black/35 active:scale-95"
                 onClick={() => video && toggleFavorite(video.id)}
                 aria-label="收藏"
-                style={{ color: isFav ? '#FFC02E' : undefined }}
+                style={{ color: isFav ? '#FFC83D' : '#fff' }}
               >
                 {isFav ? <Star className="h-6 w-6" /> : <StarLine className="h-6 w-6" />}
               </button>
-              <button className="btn-round h-12 w-12" onClick={() => setLocked(true)} aria-label="锁屏">
+              <button
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-black/35 text-white active:scale-95"
+                onClick={() => setLocked(true)}
+                aria-label="锁屏"
+              >
                 <Lock className="h-6 w-6" />
               </button>
               <button
-                className="btn-round hidden h-12 w-12 sm:flex"
+                className="hidden h-11 w-11 items-center justify-center rounded-full bg-black/35 text-white active:scale-95 sm:flex"
                 onClick={goFullscreen}
                 aria-label="全屏"
               >
@@ -427,31 +477,10 @@ export default function Player() {
             </div>
           </div>
 
-          {/* 中间大按钮 */}
-          <div className="flex items-center justify-center gap-6 sm:gap-10">
-            <button className="btn-round h-16 w-16 sm:h-20 sm:w-20" onClick={() => seek(-10)} aria-label="后退">
-              <Back10 className="h-8 w-8" />
-            </button>
-            <button
-              className="flex h-24 w-24 items-center justify-center rounded-full bg-lumo-amber text-lumo-night shadow-toy active:scale-90 sm:h-28 sm:w-28"
-              onClick={togglePlay}
-              aria-label={playing ? '暂停' : '播放'}
-            >
-              {playing ? (
-                <Pause className="h-12 w-12" />
-              ) : (
-                <Play className="h-12 w-12 translate-x-[3px]" />
-              )}
-            </button>
-            <button className="btn-round h-16 w-16 sm:h-20 sm:w-20" onClick={() => seek(10)} aria-label="快进">
-              <Fwd10 className="h-8 w-8" />
-            </button>
-          </div>
-
-          {/* 底部进度 */}
-          <div className="bg-gradient-to-t from-black/80 to-transparent p-4 pb-6">
-            <div className="flex items-center gap-3 font-extrabold tabular-nums text-white">
-              <span className="text-sm">{fmt(cur)}</span>
+          {/* 底部：黄进度条 + 选集/倍速/播放/定时/字幕 */}
+          <div className="bg-gradient-to-t from-black/75 to-transparent px-5 pb-6 pt-8">
+            <div className="flex items-center gap-3 text-body2 font-bold tabular-nums text-white">
+              <span>{fmt(cur)}</span>
               <input
                 type="range"
                 className="seek flex-1"
@@ -462,11 +491,97 @@ export default function Player() {
                 onChange={seekTo}
                 aria-label="进度"
               />
-              <span className="text-sm">{fmt(dur)}</span>
+              <span>{fmt(dur)}</span>
+            </div>
+
+            <div className="mt-4 flex items-end justify-center gap-6 sm:gap-10">
+              <PlayerCtl
+                label="选集"
+                disabled={episodes.length < 2}
+                onClick={() => setSheet('eps')}
+              >
+                <EpisodesIcon className="h-6 w-6" />
+              </PlayerCtl>
+              <PlayerCtl label={`倍速 ${rate}x`} onClick={cycleRate}>
+                <SpeedIcon className="h-6 w-6" />
+              </PlayerCtl>
+
+              <button
+                onClick={togglePlay}
+                aria-label={playing ? '暂停' : '播放'}
+                className="flex h-[68px] w-[68px] items-center justify-center rounded-full bg-white text-lumo-blue shadow-floating active:scale-90"
+              >
+                {playing ? (
+                  <Pause className="h-8 w-8" />
+                ) : (
+                  <Play className="h-8 w-8 translate-x-[2px]" />
+                )}
+              </button>
+
+              <PlayerCtl label={sleepMin ? `${sleepMin} 分` : '定时'} onClick={cycleSleep}>
+                <TimerIcon className="h-6 w-6" />
+              </PlayerCtl>
+              <PlayerCtl label="字幕" active={subsOn} onClick={toggleSubs}>
+                <SubtitleIcon className="h-6 w-6" />
+              </PlayerCtl>
             </div>
           </div>
         </div>
       )}
+
+      {/* 选集 */}
+      <Modal open={sheet === 'eps'} onClose={() => setSheet(null)}>
+        <p className="mb-3 text-title-2 text-lumo-ink">选集</p>
+        <div className="grid max-h-[60vh] grid-cols-4 gap-2 overflow-y-auto">
+          {episodes.map((ep) => (
+            <button
+              key={ep.id}
+              onClick={() => {
+                setSheet(null)
+                if (ep.id !== video?.id) nav(`/watch/${ep.id}`)
+              }}
+              className={`flex h-12 items-center justify-center rounded-md text-card font-bold ${
+                ep.id === video?.id
+                  ? 'bg-lumo-blue text-white'
+                  : 'bg-lumo-soft-blue text-lumo-blue'
+              }`}
+            >
+              {ep.episode ?? '·'}
+            </button>
+          ))}
+        </div>
+      </Modal>
     </div>
+  )
+}
+
+function PlayerCtl({
+  label,
+  children,
+  onClick,
+  disabled,
+  active,
+}: {
+  label: string
+  children: ReactNode
+  onClick: () => void
+  disabled?: boolean
+  active?: boolean
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`flex flex-col items-center gap-1.5 ${disabled ? 'opacity-35' : 'active:scale-90'}`}
+    >
+      <span
+        className={`flex h-12 w-12 items-center justify-center rounded-full ${
+          active ? 'bg-lumo-yellow text-lumo-ink' : 'bg-black/40 text-white'
+        }`}
+      >
+        {children}
+      </span>
+      <span className="whitespace-nowrap text-label font-semibold text-white/85">{label}</span>
+    </button>
   )
 }

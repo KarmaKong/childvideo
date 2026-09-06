@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import type { ReactNode } from 'react'
-import { Home, CartoonIcon, LearnIcon, MeIcon } from './icons'
-import LumoLogo from './lumo/Logo'
+import { Home, DiscoverIcon, VipIcon, MeIcon, SearchIcon } from './icons'
+import LumoMascot from './lumo/Mascot'
 
 interface Item {
   to: string
@@ -9,17 +9,17 @@ interface Item {
   icon: (p: { className?: string }) => ReactNode
 }
 const ITEMS: Item[] = [
-  { to: '/', label: '首页', icon: (p) => <Home {...p} /> },
-  { to: '/discover', label: '动画', icon: (p) => <CartoonIcon {...p} /> },
-  { to: '/learn', label: '学习', icon: (p) => <LearnIcon {...p} /> },
+  { to: '/', label: '推荐', icon: (p) => <Home {...p} /> },
+  { to: '/discover', label: '发现', icon: (p) => <DiscoverIcon {...p} /> },
+  { to: '/vip', label: '会员', icon: (p) => <VipIcon {...p} /> },
   { to: '/me', label: '我的', icon: (p) => <MeIcon {...p} /> },
 ]
 
-/* -------- BottomNavigation (mobile / tablet) -------- */
+/* -------- 底部 Tab Bar（移动 / 平板） -------- */
 export function BottomNavigation() {
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-black/[0.04] bg-lumo-cream/95 px-3 pb-[max(8px,env(safe-area-inset-bottom))] pt-2 backdrop-blur lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-30 border-t border-black/[0.05] bg-white/95 px-3 pb-[max(6px,env(safe-area-inset-bottom))] pt-2 backdrop-blur lg:hidden"
       aria-label="主导航"
     >
       <ul className="mx-auto flex max-w-md items-center justify-around">
@@ -28,21 +28,19 @@ export function BottomNavigation() {
             <NavLink
               to={it.to}
               end={it.to === '/'}
-              className="flex min-h-[56px] w-[68px] flex-col items-center justify-center gap-1"
+              className="flex min-h-[52px] w-[64px] flex-col items-center justify-center gap-1"
             >
               {({ isActive }) => (
                 <>
                   <span
-                    className={`flex h-10 w-14 items-center justify-center rounded-pill transition-colors ${
-                      isActive ? 'bg-lumo-soft-blue text-lumo-blue' : 'text-lumo-cocoa/45'
+                    className={`flex h-9 w-14 items-center justify-center rounded-pill transition-colors ${
+                      isActive ? 'bg-lumo-soft-blue text-lumo-blue' : 'text-lumo-ink/35'
                     }`}
                   >
-                    {it.icon({ className: 'h-6 w-6' })}
+                    {it.icon({ className: 'h-[22px] w-[22px]' })}
                   </span>
                   <span
-                    className={`text-[13px] font-bold ${
-                      isActive ? 'text-lumo-blue' : 'text-lumo-cocoa/45'
-                    }`}
+                    className={`text-label ${isActive ? 'text-lumo-blue' : 'text-lumo-ink/40'}`}
                   >
                     {it.label}
                   </span>
@@ -56,32 +54,46 @@ export function BottomNavigation() {
   )
 }
 
-/* -------- SideNavigation (desktop rail) -------- */
+/* -------- 蓝色悬浮导航条（桌面） -------- */
 export function SideNavigation() {
   return (
-    <aside className="sticky top-0 hidden h-screen w-[232px] shrink-0 flex-col gap-2 border-r border-black/[0.04] bg-lumo-cream px-4 py-6 lg:flex">
-      <div className="mb-4 px-2">
-        <LumoLogo size={34} />
-      </div>
-      <nav aria-label="主导航" className="flex flex-col gap-1.5">
+    <div className="sticky top-0 hidden h-screen shrink-0 items-stretch py-5 pl-4 lg:flex">
+      <nav
+        aria-label="主导航"
+        className="flex w-[76px] flex-col items-center gap-2 rounded-hero bg-lumo-blue py-5 shadow-floating"
+      >
+        <span className="mb-2 flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-white/15">
+          <LumoMascot pose="idle" size={38} animate={false} />
+        </span>
+        <NavLink
+          to="/search"
+          className="flex h-12 w-12 items-center justify-center rounded-2xl text-white/70 transition-colors hover:bg-white/10"
+          aria-label="搜索"
+        >
+          <SearchIcon className="h-[22px] w-[22px]" />
+        </NavLink>
+        <span className="my-1 h-px w-8 bg-white/15" />
         {ITEMS.map((it) => (
           <NavLink
             key={it.to}
             to={it.to}
             end={it.to === '/'}
-            className={({ isActive }) =>
-              `flex min-h-[52px] items-center gap-3 rounded-pill px-4 text-card font-bold transition-colors ${
-                isActive
-                  ? 'bg-lumo-soft-blue text-lumo-blue'
-                  : 'text-lumo-cocoa/55 hover:bg-black/[0.03]'
-              }`
-            }
+            className="group relative flex h-12 w-12 items-center justify-center"
           >
-            {it.icon({ className: 'h-6 w-6' })}
-            {it.label}
+            {({ isActive }) => (
+              <span
+                className={`flex h-12 w-12 items-center justify-center rounded-2xl transition-colors ${
+                  isActive
+                    ? 'bg-white text-lumo-blue shadow-sm'
+                    : 'text-white/75 group-hover:bg-white/10'
+                }`}
+              >
+                {it.icon({ className: 'h-6 w-6' })}
+              </span>
+            )}
           </NavLink>
         ))}
       </nav>
-    </aside>
+    </div>
   )
 }

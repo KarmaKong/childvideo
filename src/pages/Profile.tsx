@@ -4,7 +4,7 @@ import { useCatalog } from '../lib/catalog'
 import PageHeader from '../components/PageHeader'
 import {
   SectionHeader,
-  VideoRail,
+  VideoRow,
   VideoGrid,
   LoadingState,
   EmptyState,
@@ -49,7 +49,7 @@ export default function Profile() {
         <section>
           <SectionHeader title="最近看过" icon={<ClockIcon className="h-5 w-5 text-lumo-blue" />} />
           <div className="mt-3">
-            <VideoRail videos={recent.slice(0, 10)} />
+            <VideoRow videos={recent.slice(0, 10)} />
           </div>
         </section>
       )}

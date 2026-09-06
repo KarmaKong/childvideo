@@ -12,10 +12,10 @@ body,
 
 body {
   margin: 0;
-  background: theme('colors.lumo.cream');
-  color: theme('colors.lumo.cocoa');
+  background: theme('colors.lumo.page');
+  color: theme('colors.lumo.ink');
   font-family: theme('fontFamily.sans');
-  font-weight: 500;
+  font-weight: 400;
   font-synthesis-weight: none;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
@@ -24,11 +24,16 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+h1,
+h2,
+h3 {
+  font-weight: 700;
+}
+
 video::-webkit-media-controls {
   display: none !important;
 }
 
-/* 键盘可见焦点 */
 :where(button, a, input, [tabindex]):focus-visible {
   outline: 3px solid theme('colors.lumo.blue');
   outline-offset: 2px;
@@ -36,33 +41,35 @@ video::-webkit-media-controls {
 }
 
 @layer components {
-  /* 主按钮：蓝、圆胖、按下轻缩（不过冲） */
   .btn-primary {
-    @apply inline-flex min-h-[56px] items-center justify-center gap-2 rounded-pill bg-lumo-blue
-           px-7 text-card-lg font-bold text-white shadow-md
+    @apply inline-flex min-h-[52px] items-center justify-center gap-2 rounded-pill bg-lumo-blue
+           px-7 text-card text-white shadow-md
            transition-transform duration-200 ease-lumo active:scale-[0.96];
   }
   .btn-secondary {
-    @apply inline-flex min-h-[56px] items-center justify-center gap-2 rounded-pill bg-white
-           px-7 text-card-lg font-bold text-lumo-cocoa shadow-sm ring-1 ring-black/[0.04]
+    @apply inline-flex min-h-[52px] items-center justify-center gap-2 rounded-pill bg-white
+           px-7 text-card text-lumo-ink shadow-sm ring-1 ring-black/[0.05]
            transition-transform duration-200 ease-lumo active:scale-[0.96];
   }
   .btn-amber {
-    @apply inline-flex min-h-[56px] items-center justify-center gap-2 rounded-pill bg-lumo-yellow
-           px-7 text-card-lg font-bold text-lumo-cocoa shadow-md
+    @apply inline-flex min-h-[52px] items-center justify-center gap-2 rounded-pill bg-lumo-yellow
+           px-7 text-card text-lumo-ink shadow-md
            transition-transform duration-200 ease-lumo active:scale-[0.96];
   }
-  /* 圆形图标按钮，48px 触达 */
   .btn-icon {
-    @apply flex h-12 w-12 items-center justify-center rounded-full bg-white text-lumo-cocoa
-           shadow-sm ring-1 ring-black/[0.04]
+    @apply flex h-12 w-12 items-center justify-center rounded-full bg-white text-lumo-ink
+           shadow-sm ring-1 ring-black/[0.05]
            transition-transform duration-200 ease-lumo active:scale-[0.92];
   }
   .press {
     @apply transition-transform duration-200 ease-lumo active:scale-[0.97];
   }
+  /* 白色圆角面板（首页各 section 的容器） */
+  .panel {
+    @apply rounded-panel bg-white p-4 shadow-sm sm:p-5;
+  }
 
-  /* ---- 旧别名，页面迁移前保持可用 ---- */
+  /* 旧别名 */
   .btn-kid {
     @apply btn-primary;
   }
@@ -73,33 +80,32 @@ video::-webkit-media-controls {
     @apply btn-icon;
   }
   .cinema-bg {
-    background-color: theme('colors.lumo.cream');
+    background-color: theme('colors.lumo.page');
   }
 }
 
-/* 播放器进度条：粗、圆、好按 */
 input.seek {
   -webkit-appearance: none;
   appearance: none;
   height: 12px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.4);
   outline: none;
 }
 input.seek::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border-radius: 999px;
   background: theme('colors.lumo.yellow');
   border: 4px solid #fff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
   cursor: pointer;
 }
 input.seek::-moz-range-thumb {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   border-radius: 999px;
   background: theme('colors.lumo.yellow');
   border: 4px solid #fff;
