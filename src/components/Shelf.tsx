@@ -32,7 +32,7 @@ export default function Shelf({
         </h2>
         {(hasMore || linkTo) && (
           <button
-            className="press shrink-0 text-sm font-extrabold text-white/40"
+            className="press shrink-0 text-sm font-extrabold text-lumo-amber"
             onClick={() => linkTo && nav(linkTo)}
           >
             更多 ›

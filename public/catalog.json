@@ -1,10 +1,10 @@
 {
   "version": 1,
   "categories": [
-    { "id": "nursery", "name": "儿歌", "icon": "🎵", "color": "#ff7a59" },
-    { "id": "cartoon", "name": "动画", "icon": "🐰", "color": "#4dabf7" },
-    { "id": "science", "name": "科普", "icon": "🔬", "color": "#51cf66" },
-    { "id": "story", "name": "故事", "icon": "📖", "color": "#9775fa" }
+    { "id": "nursery", "name": "儿歌", "icon": "🎵", "color": "#FFC02E" },
+    { "id": "cartoon", "name": "动画", "icon": "🐰", "color": "#2E6BE6" },
+    { "id": "science", "name": "科普", "icon": "🔬", "color": "#37B58A" },
+    { "id": "story", "name": "故事", "icon": "📖", "color": "#7C5CE0" }
   ],
   "videos": [
     {

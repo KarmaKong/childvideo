@@ -269,7 +269,8 @@ export class JellyfinSource implements CatalogSource {
     }
 
     const ICONS = ['🎵', '🐰', '🔬', '📖', '🚗', '🎨', '🐘', '⚽']
-    const COLORS = ['#ff7a59', '#4dabf7', '#51cf66', '#9775fa', '#ffd43b', '#ff8787']
+    // LUMO 调色：钴蓝 / 琥珀 / 青绿 / 紫 / 浅蓝 / 红
+    const COLORS = ['#2E6BE6', '#FFC02E', '#37B58A', '#7C5CE0', '#3FA7F0', '#E8433B']
     const categories: Category[] = catOrder.map((name, i) => ({
       id: name,
       name,

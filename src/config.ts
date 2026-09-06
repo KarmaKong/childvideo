@@ -31,5 +31,5 @@ export function catalogUrl(): string {
 }
 
 export function appName(): string {
-  return envStr(runtimeConfig().appName) || '乐乐影库'
+  return envStr(runtimeConfig().appName) || 'LUMO Box'
 }

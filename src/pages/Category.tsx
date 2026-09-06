@@ -6,7 +6,7 @@ import { useProgressStore } from '../store/useProgressStore'
 import { ChevLeft } from '../components/icons'
 import type { Video } from '../types'
 
-const RAINBOW = 'linear-gradient(135deg,#FF7A59,#FFC23C,#4BC673,#3FB9E8,#9B7BF0,#FF7FB0)'
+const ALL_BG = 'linear-gradient(135deg,#2E6BE6,#7C5CE0)'
 
 /**
  * 某个片架点「更多」/ 收藏 / 全部 的落地页：通栏色块 banner + 深底密集海报网格。
@@ -44,22 +44,24 @@ export default function CategoryPage() {
       ? favorites.map((id) => byId.get(id)).filter((v): v is Video => !!v && visible(v))
       : catalog.videos.filter((v) => v.category === categoryId && visible(v))
 
-  const icon = isAll ? '🌈' : isFav ? '⭐' : cat?.icon
-  const title = isAll ? '全部' : isFav ? '收藏' : (cat?.name ?? '分类')
-  const bannerBg = isAll ? RAINBOW : isFav ? '#FFC23C' : cat?.color || '#3FB9E8'
+  const icon = isAll ? '🍿' : isFav ? '⭐' : cat?.icon
+  const title = isAll ? '全部影片' : isFav ? '收藏' : (cat?.name ?? '分类')
+  const bannerBg = isAll ? ALL_BG : isFav ? '#FFC02E' : cat?.color || '#2E6BE6'
+  const onAmber = isFav // 琥珀底用深色字
+  const bannerText = onAmber ? 'text-lumo-night' : 'text-white'
 
   return (
     <div className="cinema-bg min-h-screen pb-12">
       <div
-        className="rounded-b-[2rem] px-4 pb-7 pt-4 shadow-lg"
+        className="rounded-b-[2rem] px-4 pb-7 pt-4 shadow-toy"
         style={{ background: bannerBg }}
       >
         <button onClick={() => nav('/')} className="btn-round h-11 w-11" aria-label="返回">
           <ChevLeft className="h-6 w-6" />
         </button>
-        <div className="mt-4 flex items-center gap-3">
+        <div className={`mt-4 flex items-center gap-3 ${bannerText}`}>
           <span className="text-5xl leading-none drop-shadow-sm">{icon}</span>
-          <h1 className="text-3xl font-black text-white drop-shadow-sm">{title}</h1>
+          <h1 className="text-3xl font-black drop-shadow-sm">{title}</h1>
         </div>
       </div>
 

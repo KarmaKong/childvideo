@@ -304,7 +304,7 @@ export default function Player() {
     : ''
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-black">
+    <div className="relative h-screen w-screen overflow-hidden bg-lumo-night">
       <video
         ref={videoRef}
         poster={poster}
@@ -331,10 +331,15 @@ export default function Player() {
 
       {/* 阻断遮罩（就寝 / 时长用尽） */}
       {block.blocked && (
-        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-ink/95 p-8 text-center text-white">
-          <div className="animate-bounce text-7xl">{block.kind === 'bedtime' ? '🌙' : '⏰'}</div>
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-lumo-night/97 p-8 text-center text-white">
+          <div
+            className="flex h-24 w-24 items-center justify-center rounded-full text-6xl"
+            style={{ background: 'rgba(232,67,59,0.16)' }}
+          >
+            {block.kind === 'bedtime' ? '🌙' : '⏰'}
+          </div>
           <p className="max-w-xs text-2xl font-black leading-snug">{block.message}</p>
-          <button className="btn-kid" onClick={() => nav('/')}>
+          <button className="btn-amber" onClick={() => nav('/')}>
             好哒
           </button>
         </div>
@@ -405,7 +410,7 @@ export default function Player() {
                 className="btn-round h-12 w-12"
                 onClick={() => video && toggleFavorite(video.id)}
                 aria-label="收藏"
-                style={{ color: isFav ? '#FFC23C' : undefined }}
+                style={{ color: isFav ? '#FFC02E' : undefined }}
               >
                 {isFav ? <Star className="h-6 w-6" /> : <StarLine className="h-6 w-6" />}
               </button>
@@ -428,7 +433,7 @@ export default function Player() {
               <Back10 className="h-8 w-8" />
             </button>
             <button
-              className="flex h-24 w-24 items-center justify-center rounded-full bg-candy-coral text-white shadow-toy active:scale-90 sm:h-28 sm:w-28"
+              className="flex h-24 w-24 items-center justify-center rounded-full bg-lumo-amber text-lumo-night shadow-toy active:scale-90 sm:h-28 sm:w-28"
               onClick={togglePlay}
               aria-label={playing ? '暂停' : '播放'}
             >

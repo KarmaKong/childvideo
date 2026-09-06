@@ -35,14 +35,16 @@ export default function ParentalGate({ onPass, onCancel }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-lumo-night/70 p-6 backdrop-blur-sm">
       <form
         onSubmit={submit}
-        className="w-full max-w-sm rounded-blob bg-white p-6 text-center shadow-2xl"
+        className="w-full max-w-sm rounded-blob bg-lumo-cream p-6 text-center text-lumo-night shadow-2xl"
       >
-        <div className="text-5xl">🔒</div>
-        <h2 className="mt-3 text-xl font-bold">请家长完成验证</h2>
-        <p className="mt-1 text-sm text-gray-500">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-lumo-blue/12 text-3xl">
+          🔒
+        </div>
+        <h2 className="mt-3 text-xl font-black">请家长完成验证</h2>
+        <p className="mt-1 text-sm font-bold text-lumo-night/50">
           {usePin ? '请输入 4 位家长验证码' : `请计算：${quiz.a} × ${quiz.b} = ?`}
         </p>
 
@@ -54,9 +56,9 @@ export default function ParentalGate({ onPass, onCancel }: Props) {
             setWrong(false)
             setInput(e.target.value.replace(/\D/g, '').slice(0, 4))
           }}
-          className="mt-4 w-full rounded-2xl border-2 border-gray-200 px-4 py-3 text-center text-2xl tracking-widest outline-none focus:border-kid-accent"
+          className="mt-4 w-full rounded-2xl border-2 border-lumo-night/10 px-4 py-3 text-center text-2xl font-black tracking-widest outline-none focus:border-lumo-blue"
         />
-        {wrong && <p className="mt-2 text-sm font-bold text-kid-primary">再试一次～</p>}
+        {wrong && <p className="mt-2 text-sm font-black text-lumo-red">再试一次～</p>}
 
         <div className="mt-5 flex gap-3">
           <button type="button" className="btn-ghost flex-1" onClick={onCancel}>

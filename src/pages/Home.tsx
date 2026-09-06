@@ -35,25 +35,21 @@ export default function Home() {
       <div className="grid grid-cols-2 gap-3 px-4 pt-4">
         {favList.length > 0 && (
           <button
-            className="press flex items-center gap-2 rounded-blob px-4 py-5 shadow-toysm"
-            style={{ background: '#FFC23C' }}
+            className="press flex items-center gap-2 rounded-blob bg-lumo-amber px-4 py-5 text-lumo-night shadow-toysm"
             onClick={() => nav('/c/fav')}
           >
-            <span className="text-3xl leading-none drop-shadow-sm">⭐</span>
-            <span className="text-lg font-black text-white drop-shadow-sm">收藏</span>
+            <span className="text-3xl leading-none">⭐</span>
+            <span className="text-lg font-black">收藏</span>
           </button>
         )}
         <button
-          className={`press flex items-center gap-2 rounded-blob px-4 py-5 shadow-toysm ${
+          className={`press flex items-center gap-2 rounded-blob bg-lumo-blue px-4 py-5 text-white shadow-toysm ${
             favList.length > 0 ? '' : 'col-span-2'
           }`}
-          style={{
-            background: 'linear-gradient(135deg,#FF7A59,#FFC23C,#4BC673,#3FB9E8,#9B7BF0,#FF7FB0)',
-          }}
           onClick={() => nav('/c/all')}
         >
-          <span className="text-3xl leading-none drop-shadow-sm">🌈</span>
-          <span className="text-lg font-black text-white drop-shadow-sm">看全部</span>
+          <span className="text-3xl leading-none">🍿</span>
+          <span className="text-lg font-black">全部影片</span>
         </button>
       </div>
 

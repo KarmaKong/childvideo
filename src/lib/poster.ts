@@ -1,12 +1,13 @@
 // 没有封面图时，用标题生成一个稳定的彩色 SVG 占位图（data URI，无外部请求）。
 // 幼儿向：大色块渐变 + 一个简单友好的形状，不用文字。
+// LUMO 双色：钴蓝 / 琥珀 / 青绿 / 紫 / 午夜蓝 / 爆米花红
 const PAIRS: [string, string][] = [
-  ['#FF7A59', '#FFC23C'],
-  ['#3FB9E8', '#4BC673'],
-  ['#9B7BF0', '#FF7FB0'],
-  ['#4BC673', '#FFC23C'],
-  ['#FF7FB0', '#FF7A59'],
-  ['#3FB9E8', '#9B7BF0'],
+  ['#2E6BE6', '#FFC02E'],
+  ['#1E3A7A', '#3FA7F0'],
+  ['#37B58A', '#FFC02E'],
+  ['#7C5CE0', '#2E6BE6'],
+  ['#FFC02E', '#E8433B'],
+  ['#141A2E', '#2E6BE6'],
 ]
 
 function hash(str: string): number {

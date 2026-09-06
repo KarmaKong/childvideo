@@ -10,8 +10,8 @@ body,
 
 body {
   margin: 0;
-  background: theme('colors.cream');
-  color: theme('colors.ink');
+  background: theme('colors.lumo.ground');
+  color: #fff;
   font-family: theme('fontFamily.round');
   font-weight: 700;
   -webkit-font-smoothing: antialiased;
@@ -25,20 +25,26 @@ video::-webkit-media-controls {
 }
 
 @layer components {
-  /* 玩具感按钮：厚底、圆胖、按下去会陷 */
+  /* 主按钮：钴蓝、圆胖、按下去会陷 */
   .btn-kid {
-    @apply inline-flex items-center justify-center gap-2 rounded-pill bg-candy-coral px-7 py-4
+    @apply inline-flex items-center justify-center gap-2 rounded-pill bg-lumo-blue px-7 py-4
            text-xl font-extrabold text-white shadow-toysm
+           transition-transform duration-100 active:translate-y-1 active:scale-95;
+  }
+  /* 强调按钮：琥珀底 + 深色字（对比够，配 logo 那只猫的黄） */
+  .btn-amber {
+    @apply inline-flex items-center justify-center gap-2 rounded-pill bg-lumo-amber px-7 py-4
+           text-xl font-extrabold text-lumo-night shadow-toysm
            transition-transform duration-100 active:translate-y-1 active:scale-95;
   }
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-2 rounded-pill bg-white px-6 py-4
-           text-xl font-extrabold text-candy-coral shadow-toysm
+           text-xl font-extrabold text-lumo-blue shadow-toysm
            transition-transform duration-100 active:translate-y-1 active:scale-95;
   }
-  /* 大圆按钮（播放器用） */
+  /* 播放器大圆按钮 */
   .btn-round {
-    @apply flex items-center justify-center rounded-full bg-white/90 text-ink shadow-toysm
+    @apply flex items-center justify-center rounded-full bg-white/95 text-lumo-night shadow-toysm
            transition-transform duration-100 active:scale-90;
   }
   .press {
@@ -46,12 +52,15 @@ video::-webkit-media-controls {
   }
 }
 
-/* 全站「影库」深底页面（首页/分类页）：近黑底 + 顶部极淡光晕，营造一点影院感 */
+/* 全站深底页面（首页 / 分类页）：午夜蓝 + 顶部一缕琥珀光 */
 .cinema-bg {
-  background-color: theme('colors.night');
-  background-image: radial-gradient(120% 60% at 50% -10%, rgba(255, 255, 255, 0.06), transparent 60%);
+  background-color: theme('colors.lumo.ground');
+  background-image: radial-gradient(
+    130% 62% at 50% -12%,
+    rgba(255, 192, 46, 0.16),
+    rgba(255, 192, 46, 0) 62%
+  );
 }
-
 
 /* 播放器进度条：粗、圆、好按 */
 input.seek {
@@ -59,7 +68,7 @@ input.seek {
   appearance: none;
   height: 14px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.24);
   outline: none;
 }
 input.seek::-webkit-slider-thumb {
@@ -68,16 +77,16 @@ input.seek::-webkit-slider-thumb {
   width: 30px;
   height: 30px;
   border-radius: 999px;
-  background: theme('colors.candy.coral');
+  background: theme('colors.lumo.amber');
   border: 4px solid #fff;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
   cursor: pointer;
 }
 input.seek::-moz-range-thumb {
   width: 26px;
   height: 26px;
   border-radius: 999px;
-  background: theme('colors.candy.coral');
+  background: theme('colors.lumo.amber');
   border: 4px solid #fff;
   cursor: pointer;
 }
@@ -85,11 +94,13 @@ input.seek::-moz-range-thumb {
 @media (prefers-reduced-motion: reduce) {
   .animate-pop,
   .animate-bloom,
-  .animate-wiggle {
+  .animate-wiggle,
+  .animate-bounce {
     animation: none !important;
   }
   .press,
   .btn-kid,
+  .btn-amber,
   .btn-ghost,
   .btn-round {
     transition: none !important;

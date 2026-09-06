@@ -45,7 +45,8 @@ export default function ParentSettings() {
     s.allowedCategories.length === 0 || s.allowedCategories.includes(id)
 
   return (
-    <div className="mx-auto max-w-lg space-y-3 p-4">
+    <div className="min-h-screen bg-lumo-cream text-lumo-night">
+     <div className="mx-auto max-w-lg space-y-3 p-4">
       <div className="flex items-center gap-3">
         <button className="btn-round h-12 w-12" onClick={() => nav('/')} aria-label="完成">
           <ChevLeft className="h-6 w-6" />
@@ -53,7 +54,7 @@ export default function ParentSettings() {
         <h1 className="text-2xl font-black">家长设置</h1>
       </div>
 
-      <div className="rounded-blob bg-candy-sky/15 p-4 text-sm font-extrabold tabular-nums text-candy-sky">
+      <div className="rounded-blob bg-lumo-blue/12 p-4 text-sm font-extrabold tabular-nums text-lumo-blue">
         今日已观看 {Math.round(todayMin)} 分钟
         {s.dailyLimitMin > 0 && ` / ${s.dailyLimitMin} 分钟`}
       </div>
@@ -134,10 +135,11 @@ export default function ParentSettings() {
         onClick={() => {
           if (confirm('清空观看历史与「继续观看」记录？')) clearHistory()
         }}
-        className="w-full rounded-blob bg-white p-4 text-left font-extrabold text-candy-coral shadow-toysm"
+        className="w-full rounded-blob bg-white p-4 text-left font-extrabold text-lumo-red shadow-toysm"
       >
         清空观看历史
       </button>
+     </div>
     </div>
   )
 }
