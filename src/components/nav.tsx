@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { Home, DiscoverIcon, VipIcon, MeIcon, SearchIcon } from './icons'
-import LumoMascot from './lumo/Mascot'
+import LumoLogo from './lumo/Logo'
 
 interface Item {
   to: string
@@ -62,8 +62,8 @@ export function SideNavigation() {
         aria-label="主导航"
         className="flex w-[76px] flex-col items-center gap-2 rounded-hero bg-lumo-blue py-5 shadow-floating"
       >
-        <span className="mb-2 flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-white/15">
-          <LumoMascot pose="idle" size={38} animate={false} />
+        <span className="mb-2 flex items-center justify-center">
+          <LumoLogo size={44} showWordmark={false} />
         </span>
         <NavLink
           to="/search"

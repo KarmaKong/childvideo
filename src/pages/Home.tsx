@@ -15,18 +15,16 @@ import { isCategoryAllowed, useSettingsStore } from '../store/useSettingsStore'
 import { useProgressStore } from '../store/useProgressStore'
 import type { Video } from '../types'
 
-const CAT_EMOJI: Record<string, string> = {
-  动画: '🎬',
-  cartoon: '🎬',
-  儿歌: '🎵',
-  nursery: '🎵',
-  英语: '🔤',
-  english: '🔤',
-  科普: '🔬',
-  science: '🔬',
-  益智: '🧩',
-  故事: '📖',
-  story: '📖',
+const B = import.meta.env.BASE_URL
+const ILLU = `${B}illust/category/`
+function catArt(idName: string): { illust?: string; emoji: string } {
+  const k = idName.toLowerCase()
+  if (/cartoon|动画/.test(k)) return { illust: `${ILLU}category-cartoons.svg`, emoji: '🎬' }
+  if (/nursery|music|儿歌|音乐/.test(k)) return { illust: `${ILLU}category-music.svg`, emoji: '🎵' }
+  if (/science|科普/.test(k)) return { illust: `${ILLU}category-science.svg`, emoji: '🔬' }
+  if (/story|故事/.test(k)) return { illust: `${ILLU}category-stories.svg`, emoji: '📖' }
+  if (/english|英语|learn|学习|益智|edu/.test(k)) return { illust: `${ILLU}category-learn.svg`, emoji: '🧩' }
+  return { emoji: '🎈' }
 }
 const TINT_CYCLE = ['coral', 'blue', 'purple', 'green', 'yellow', 'purple', 'coral']
 
@@ -106,15 +104,19 @@ export default function Home() {
             />
             <div className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <CategoryTile label="全部" emoji="🗂️" tint="blue" onClick={() => nav('/discover')} />
-              {cats.map((c, i) => (
-                <CategoryTile
-                  key={c.id}
-                  label={c.name}
-                  emoji={CAT_EMOJI[c.id] || CAT_EMOJI[c.name] || c.icon || '🎈'}
-                  tint={TINT_CYCLE[i % TINT_CYCLE.length]}
-                  onClick={() => nav(`/c/${c.id}`)}
-                />
-              ))}
+              {cats.map((c, i) => {
+                const art = catArt(`${c.id} ${c.name}`)
+                return (
+                  <CategoryTile
+                    key={c.id}
+                    label={c.name}
+                    illust={art.illust}
+                    emoji={art.emoji}
+                    tint={TINT_CYCLE[i % TINT_CYCLE.length]}
+                    onClick={() => nav(`/c/${c.id}`)}
+                  />
+                )
+              })}
             </div>
           </Panel>
         )}

@@ -50,11 +50,13 @@ const TINTS: Record<string, string> = {
 export function CategoryTile({
   label,
   emoji,
+  illust,
   tint = 'blue',
   onClick,
 }: {
   label: string
-  emoji: string
+  emoji?: string
+  illust?: string
   tint?: keyof typeof TINTS | string
   onClick?: () => void
 }) {
@@ -62,10 +64,14 @@ export function CategoryTile({
   return (
     <button onClick={onClick} className="press flex w-[76px] shrink-0 flex-col items-center gap-2">
       <span
-        className="flex h-16 w-16 items-center justify-center rounded-panel text-3xl shadow-sm"
-        style={{ background: `${bg}22` }}
+        className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-panel shadow-sm"
+        style={{ background: `${bg}1f` }}
       >
-        <span style={{ filter: 'saturate(1.1)' }}>{emoji}</span>
+        {illust ? (
+          <img src={illust} alt="" aria-hidden className="h-[52px] w-[52px] object-contain" />
+        ) : (
+          <span className="text-3xl">{emoji ?? '🎈'}</span>
+        )}
       </span>
       <span className="text-body2 font-semibold text-lumo-ink/80">{label}</span>
     </button>
