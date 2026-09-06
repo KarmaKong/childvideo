@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import type { ReactNode } from 'react'
-import { HomeLine, Home, CartoonIcon, LearnIcon, MeIcon, SearchIcon } from './icons'
+import { HomeLine, Home, CartoonIcon, LearnIcon, HeartIcon, HeartFill, MeIcon } from './icons'
 import LumoLogo from './lumo/Logo'
 
 interface Item {
@@ -8,10 +8,12 @@ interface Item {
   label: string
   icon: (p: { className?: string }, active: boolean) => ReactNode
 }
+// 儿童主导航只有 5 项；家长中心不在这里（固定在右上角）
 const ITEMS: Item[] = [
   { to: '/', label: '首页', icon: (p, a) => (a ? <Home {...p} /> : <HomeLine {...p} />) },
   { to: '/discover', label: '动画', icon: (p) => <CartoonIcon {...p} /> },
   { to: '/learn', label: '学习', icon: (p) => <LearnIcon {...p} /> },
+  { to: '/c/fav', label: '收藏', icon: (p, a) => (a ? <HeartFill {...p} /> : <HeartIcon {...p} />) },
   { to: '/me', label: '我的', icon: (p) => <MeIcon {...p} /> },
 ]
 
@@ -19,25 +21,25 @@ const ITEMS: Item[] = [
 export function BottomNavigation() {
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-black/[0.05] bg-white/95 px-2 pb-[max(6px,env(safe-area-inset-bottom))] pt-1.5 backdrop-blur nav:hidden"
+      className="fixed inset-x-0 bottom-0 z-30 border-t border-black/[0.05] bg-white/95 px-1 pb-[max(6px,env(safe-area-inset-bottom))] pt-1.5 backdrop-blur nav:hidden"
       aria-label="主导航"
     >
-      <ul className="mx-auto flex max-w-lg items-center justify-around">
+      <ul className="mx-auto flex max-w-xl items-stretch justify-around">
         {ITEMS.map((it) => (
           <li key={it.to} className="flex-1">
             <NavLink
               to={it.to}
               end={it.to === '/'}
-              className="mx-auto flex min-h-[54px] w-[72px] flex-col items-center justify-center gap-1"
+              className="mx-auto flex min-h-[54px] max-w-[76px] flex-col items-center justify-center gap-1"
             >
               {({ isActive }) => (
                 <>
                   <span
-                    className={`flex h-9 w-14 items-center justify-center rounded-pill transition-colors ${
+                    className={`flex h-8 w-12 items-center justify-center rounded-pill transition-colors ${
                       isActive ? 'bg-lumo-soft-blue text-lumo-blue' : 'text-lumo-ink/35'
                     }`}
                   >
-                    {it.icon({ className: 'h-[22px] w-[22px]' }, isActive)}
+                    {it.icon({ className: 'h-[21px] w-[21px]' }, isActive)}
                   </span>
                   <span
                     className={`text-label ${isActive ? 'text-lumo-blue' : 'text-lumo-ink/40'}`}
@@ -60,19 +62,12 @@ export function SideNavigation() {
     <div className="hidden shrink-0 py-4 pl-3 nav:block">
       <nav
         aria-label="主导航"
-        className="sticky top-4 flex w-[72px] flex-col items-center gap-1.5 rounded-hero bg-lumo-blue py-4 shadow-floating"
+        className="sticky top-4 flex w-[72px] flex-col items-center gap-2 rounded-hero bg-lumo-blue py-4 shadow-floating"
       >
-        <span className="mb-1.5">
+        <NavLink to="/" aria-label="LUMO Box 首页" className="mb-1">
           <LumoLogo size={42} showWordmark={false} />
-        </span>
-        <NavLink
-          to="/search"
-          aria-label="搜索"
-          className="flex h-11 w-11 items-center justify-center rounded-2xl text-white/70 transition-colors hover:bg-white/10"
-        >
-          <SearchIcon className="h-[22px] w-[22px]" />
         </NavLink>
-        <span className="my-1 h-px w-7 bg-white/15" />
+        <span className="h-px w-7 bg-white/15" />
         {ITEMS.map((it) => (
           <NavLink key={it.to} to={it.to} end={it.to === '/'} aria-label={it.label}>
             {({ isActive }) => (

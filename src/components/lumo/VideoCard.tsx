@@ -142,19 +142,30 @@ export function VideoGrid({
   )
 }
 
-/* ---------------- VideoRow（面板内一行，横向滚动） ---------------- */
+/* ---------------- VideoRow ----------------
+   竖屏：横向滚动 carousel。横屏(>900)：转为一行 4–6 个的网格（不再无限横向展开）。
+   同一份数据，只换 layout composition。                                              */
 export function VideoRow({
   videos,
   subtitleOf,
+  max = 6,
 }: {
   videos: Video[]
   subtitleOf?: (v: Video) => string | undefined
+  max?: number
 }) {
   if (videos.length === 0) return null
   return (
-    <div className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      {videos.map((v, i) => (
-        <div key={v.id} className="w-[180px] shrink-0 sm:w-[212px]">
+    <div
+      className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
+                 nav:mx-0 nav:grid nav:grid-cols-4 nav:gap-5 nav:overflow-visible nav:px-0
+                 wide:grid-cols-5 min-[1440px]:grid-cols-6"
+    >
+      {videos.slice(0, max).map((v, i) => (
+        <div
+          key={v.id}
+          className={`w-[172px] shrink-0 sm:w-[204px] nav:w-auto ${i >= 4 ? 'nav:hidden wide:block' : ''} ${i >= 5 ? 'wide:hidden min-[1440px]:block' : ''}`}
+        >
           <VideoCard video={v} index={i} subtitle={subtitleOf?.(v)} />
         </div>
       ))}

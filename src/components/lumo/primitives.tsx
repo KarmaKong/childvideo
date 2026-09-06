@@ -22,10 +22,11 @@ export function SectionHeader({
       {onMore && (
         <button
           onClick={onMore}
-          aria-label={`更多 ${title}`}
-          className="press flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-lumo-soft-blue text-lumo-blue"
+          aria-label={`查看全部 ${title}`}
+          className="press flex shrink-0 items-center gap-0.5 rounded-pill px-2 py-1 text-body2 font-bold text-lumo-blue"
         >
-          <ChevRight className="h-5 w-5" />
+          <span className="hidden pt:inline">查看全部</span>
+          <ChevRight className="h-4 w-4" />
         </button>
       )}
     </div>
