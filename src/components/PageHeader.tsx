@@ -14,7 +14,7 @@ export default function PageHeader({
   right?: ReactNode
 }) {
   return (
-    <header className="flex items-center gap-3 px-5 pt-5">
+    <header className="flex items-center gap-3 px-4 pt-5 pt:px-6 ipad:px-8">
       <LumoMascot pose={pose} size={48} />
       <div className="min-w-0">
         <h1 className="truncate text-page-title font-extrabold text-lumo-cocoa">{title}</h1>

@@ -4,6 +4,13 @@ export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
+      screens: {
+        // LUMO 断点：<600 手机竖屏 / 600–900 平板竖屏 / >900 横屏·桌面
+        pt: '600px', // 平板竖屏起
+        ipad: '768px', // 竖屏 iPad
+        nav: '900px', // 切到左侧导航条
+        wide: '1200px',
+      },
       fontFamily: {
         sans: [
           '"Nunito Variable"',

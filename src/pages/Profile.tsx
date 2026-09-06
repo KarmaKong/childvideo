@@ -30,7 +30,7 @@ export default function Profile() {
   const favs = favorites.map((id) => byId.get(id)).filter((v): v is Video => !!v)
 
   return (
-    <div className="flex flex-col gap-7 pb-4">
+    <div className="flex flex-col gap-6 pb-6">
       <PageHeader
         title="我的"
         subtitle="Mia"
@@ -45,29 +45,31 @@ export default function Profile() {
         }
       />
 
-      {recent.length > 0 && (
+      <div className="flex flex-col gap-6 px-4 pt:px-6 ipad:px-8">
+        {recent.length > 0 && (
+          <section>
+            <SectionHeader title="最近看过" icon={<ClockIcon className="h-5 w-5 text-lumo-blue" />} />
+            <div className="mt-3">
+              <VideoRow videos={recent.slice(0, 10)} />
+            </div>
+          </section>
+        )}
+
         <section>
-          <SectionHeader title="最近看过" icon={<ClockIcon className="h-5 w-5 text-lumo-blue" />} />
+          <SectionHeader title="我的收藏" icon={<HeartFill className="h-5 w-5 text-lumo-coral" />} />
           <div className="mt-3">
-            <VideoRow videos={recent.slice(0, 10)} />
+            {favs.length > 0 ? (
+              <VideoGrid videos={favs} />
+            ) : (
+              <EmptyState
+                pose="box"
+                title="这里还没有收藏的视频哦"
+                hint="看视频时点右上角的星星就能收藏"
+              />
+            )}
           </div>
         </section>
-      )}
-
-      <section>
-        <SectionHeader title="我的收藏" icon={<HeartFill className="h-5 w-5 text-lumo-coral" />} />
-        <div className="mt-3">
-          {favs.length > 0 ? (
-            <VideoGrid videos={favs} />
-          ) : (
-            <EmptyState
-              pose="box"
-              title="这里还没有收藏的视频哦"
-              hint="看视频时点右上角的星星就能收藏"
-            />
-          )}
-        </div>
-      </section>
+      </div>
 
       {gate && (
         <ParentalGate

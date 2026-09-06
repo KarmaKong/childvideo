@@ -7,6 +7,7 @@ import {
   Panel,
   CategoryTile,
   VideoRow,
+  ContinueWatchingHero,
   LoadingState,
   EmptyState,
 } from '../components/lumo'
@@ -17,14 +18,16 @@ import type { Video } from '../types'
 
 const B = import.meta.env.BASE_URL
 const ILLU = `${B}illust/category/`
-function catArt(idName: string): { illust?: string; emoji: string } {
+const CAT_SVGS = ['cartoons', 'music', 'science', 'stories', 'learn']
+function catArt(idName: string, i: number): string {
   const k = idName.toLowerCase()
-  if (/cartoon|动画/.test(k)) return { illust: `${ILLU}category-cartoons.svg`, emoji: '🎬' }
-  if (/nursery|music|儿歌|音乐/.test(k)) return { illust: `${ILLU}category-music.svg`, emoji: '🎵' }
-  if (/science|科普/.test(k)) return { illust: `${ILLU}category-science.svg`, emoji: '🔬' }
-  if (/story|故事/.test(k)) return { illust: `${ILLU}category-stories.svg`, emoji: '📖' }
-  if (/english|英语|learn|学习|益智|edu/.test(k)) return { illust: `${ILLU}category-learn.svg`, emoji: '🧩' }
-  return { emoji: '🎈' }
+  let name = CAT_SVGS[i % CAT_SVGS.length] // 无关键词匹配时轮换，避免同一个图标刷屏
+  if (/cartoon|动画|anim/.test(k)) name = 'cartoons'
+  else if (/nursery|music|儿歌|song|音乐/.test(k)) name = 'music'
+  else if (/science|科普|number|math/.test(k)) name = 'science'
+  else if (/story|故事|tale/.test(k)) name = 'stories'
+  else if (/english|英语|learn|学习|益智|edu|abc/.test(k)) name = 'learn'
+  return `${ILLU}category-${name}.svg`
 }
 const TINT_CYCLE = ['coral', 'blue', 'purple', 'green', 'yellow', 'purple', 'coral']
 
@@ -57,13 +60,15 @@ export default function Home() {
   const byId = new Map(catalog.videos.map((v) => [v.id, v]))
   const recent = history.map((id) => byId.get(id)).filter((v): v is Video => !!v && visible(v))
 
-  // 为你推荐：优先「有进度、没看完」的，再补新的
   const inProgress = recent.filter((v) => {
     const e = progress[v.id]
     return e && e.position > 5 && e.duration > 0 && e.position < e.duration - 10
   })
-  const fill = all.filter((v) => !inProgress.some((r) => r.id === v.id)).slice(0, 8)
-  const recommend = [...inProgress, ...fill].slice(0, 10)
+  const hero = inProgress[0]
+  const seen = new Set(hero ? [hero.id] : [])
+  const recommend = [...inProgress.filter((v) => !seen.has(v.id)), ...all.filter((v) => !seen.has(v.id))]
+    .filter((v, i, a) => a.findIndex((x) => x.id === v.id) === i)
+    .slice(0, 12)
 
   const cats = catalog.categories.filter(
     (c) => isCategoryAllowed(settings, c.id) && all.some((v) => v.category === c.id),
@@ -73,17 +78,19 @@ export default function Home() {
     return (
       <>
         <TopBar />
-        <div className="px-4 sm:px-5">
+        <div className="px-4 pt:px-6 ipad:px-8">
           <EmptyState pose="box" title="片库还是空的" hint="家长在片库里加几个视频就好啦" />
         </div>
       </>
     )
 
   return (
-    <div className="flex flex-col gap-4 pb-4">
+    <div className="flex flex-col gap-6 pb-6">
       <TopBar />
 
-      <div className="flex flex-col gap-4 px-4 sm:px-5">
+      <div className="flex flex-col gap-6 px-4 pt:px-6 ipad:px-8">
+        {hero && <ContinueWatchingHero video={hero} />}
+
         <Panel>
           <SectionHeader
             title="为你推荐"
@@ -104,19 +111,15 @@ export default function Home() {
             />
             <div className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <CategoryTile label="全部" emoji="🗂️" tint="blue" onClick={() => nav('/discover')} />
-              {cats.map((c, i) => {
-                const art = catArt(`${c.id} ${c.name}`)
-                return (
-                  <CategoryTile
-                    key={c.id}
-                    label={c.name}
-                    illust={art.illust}
-                    emoji={art.emoji}
-                    tint={TINT_CYCLE[i % TINT_CYCLE.length]}
-                    onClick={() => nav(`/c/${c.id}`)}
-                  />
-                )
-              })}
+              {cats.map((c, i) => (
+                <CategoryTile
+                  key={c.id}
+                  label={c.name}
+                  illust={catArt(`${c.id} ${c.name}`, i)}
+                  tint={TINT_CYCLE[i % TINT_CYCLE.length]}
+                  onClick={() => nav(`/c/${c.id}`)}
+                />
+              ))}
             </div>
           </Panel>
         )}

@@ -24,27 +24,29 @@ export default function Discover() {
   )
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5 pb-6">
       <PageHeader title="看点什么" subtitle="挑一个分类" pose="happy" />
 
-      <div className="flex gap-3 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <CategoryChip label="全部" active={pick === 'all'} onClick={() => setPick('all')} />
-        {cats.map((c) => (
-          <CategoryChip
-            key={c.id}
-            label={c.name}
-            icon={<span className="text-lg leading-none">{c.icon}</span>}
-            active={pick === c.id}
-            onClick={() => setPick(c.id)}
-          />
-        ))}
-      </div>
+      <div className="flex flex-col gap-5 px-4 pt:px-6 ipad:px-8">
+        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <CategoryChip label="全部" active={pick === 'all'} onClick={() => setPick('all')} />
+          {cats.map((c) => (
+            <CategoryChip
+              key={c.id}
+              label={c.name}
+              icon={<span className="text-lg leading-none">{c.icon}</span>}
+              active={pick === c.id}
+              onClick={() => setPick(c.id)}
+            />
+          ))}
+        </div>
 
-      {vids.length > 0 ? (
-        <VideoGrid videos={vids} />
-      ) : (
-        <EmptyState pose="peek" title="这个分类还没有视频" />
-      )}
+        {vids.length > 0 ? (
+          <VideoGrid videos={vids} />
+        ) : (
+          <EmptyState pose="peek" title="这个分类还没有视频" />
+        )}
+      </div>
     </div>
   )
 }

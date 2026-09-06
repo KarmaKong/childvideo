@@ -6,6 +6,7 @@ import { placeholderPoster } from '../../lib/poster'
 import { useProgressStore } from '../../store/useProgressStore'
 import { Play } from '../icons'
 import { DurationBadge, ProgressBar } from './primitives'
+import { PrimaryButton } from './Button'
 
 function fmtDur(sec?: number) {
   if (!sec) return null
@@ -48,7 +49,7 @@ export function VideoCard({
       className="press group block w-full text-left animate-lumo-in"
       style={{ animationDelay: `${Math.min(index, 8) * 35}ms` }}
     >
-      <div className="relative overflow-hidden rounded-md bg-lumo-soft-blue transition-transform duration-200 ease-lumo group-hover:-translate-y-1">
+      <div className="relative overflow-hidden rounded-card bg-lumo-soft-blue transition-transform duration-200 ease-lumo group-hover:-translate-y-1">
         <img
           src={poster}
           alt={video.title}
@@ -77,6 +78,53 @@ export function VideoCard({
   )
 }
 
+/* ---------------- ContinueWatchingHero ---------------- */
+export function ContinueWatchingHero({ video }: { video: Video }) {
+  const nav = useNavigate()
+  const entry = useProgressStore((st) => st.progress[video.id])
+  const poster = getSource().resolvePoster(video) ?? placeholderPoster(video.title)
+  const pct =
+    entry && entry.duration > 0 ? Math.min(100, (entry.position / entry.duration) * 100) : 0
+  const watchedMin = Math.max(1, Math.round((entry?.position ?? 0) / 60))
+  const ep = video.series && video.episode != null ? `第 ${video.episode} 集` : undefined
+
+  return (
+    <section className="overflow-hidden rounded-panel bg-white shadow-sm">
+      <div className="flex flex-col pt:flex-row">
+        <button
+          onClick={() => nav(`/watch/${video.id}`)}
+          className="press relative w-full shrink-0 pt:w-[46%]"
+          aria-label={video.title}
+        >
+          <img src={poster} alt={video.title} className="aspect-video h-full w-full object-cover" />
+          <span className="absolute inset-0 flex items-center justify-center">
+            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/95 text-lumo-blue shadow-md">
+              <Play className="h-7 w-7 translate-x-[2px]" />
+            </span>
+          </span>
+        </button>
+        <div className="flex flex-1 flex-col justify-center gap-3 p-5">
+          <div>
+            <p className="text-caption font-bold text-lumo-blue">继续观看</p>
+            <h3 className="mt-1 line-clamp-2 text-title-2 text-lumo-ink">{video.title}</h3>
+            <p className="mt-1 text-body2 text-lumo-ink/50">
+              {ep ? `${ep} · ` : ''}已观看 {watchedMin} 分钟
+            </p>
+          </div>
+          <ProgressBar value={pct} tone="yellow" />
+          <PrimaryButton
+            className="mt-1 self-start"
+            icon={<Play className="h-5 w-5" />}
+            onClick={() => nav(`/watch/${video.id}`)}
+          >
+            继续观看
+          </PrimaryButton>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 /* ---------------- VideoGrid ---------------- */
 export function VideoGrid({
   videos,
@@ -86,7 +134,7 @@ export function VideoGrid({
   subtitleOf?: (v: Video) => string | undefined
 }) {
   return (
-    <div className="grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-3 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-x-4 gap-y-5 pt:grid-cols-3 ipad:grid-cols-4 wide:grid-cols-5">
       {videos.map((v, i) => (
         <VideoCard key={v.id} video={v} index={i} subtitle={subtitleOf?.(v)} />
       ))}

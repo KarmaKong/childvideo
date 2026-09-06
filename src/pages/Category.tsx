@@ -53,7 +53,7 @@ export default function CategoryPage() {
     v.series && epCount.get(v.series)! > 1 ? `共${epCount.get(v.series)}集` : undefined
 
   return (
-    <div className="flex flex-col gap-4 px-4 pt-5 sm:px-5">
+    <div className="flex flex-col gap-5 px-4 pt-5 pt:px-6 ipad:px-8">
       <div className="flex items-center gap-3">
         <button
           onClick={() => nav(-1)}

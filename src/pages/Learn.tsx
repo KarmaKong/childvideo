@@ -26,13 +26,15 @@ export default function Learn() {
   const vids = catalog.videos.filter((v) => visible(v) && learnCatIds.includes(v.category))
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5 pb-6">
       <PageHeader title="学点新东西" subtitle="科普 · 益智 · 英语" pose="idle" />
-      {vids.length > 0 ? (
-        <VideoGrid videos={vids} />
-      ) : (
-        <EmptyState pose="box" title="还没有学习类视频" hint="家长把科普 / 英语的视频加进片库就会出现在这里" />
-      )}
+      <div className="px-4 pt:px-6 ipad:px-8">
+        {vids.length > 0 ? (
+          <VideoGrid videos={vids} />
+        ) : (
+          <EmptyState pose="box" title="还没有学习类视频" hint="家长把科普 / 英语的视频加进片库就会出现在这里" />
+        )}
+      </div>
     </div>
   )
 }

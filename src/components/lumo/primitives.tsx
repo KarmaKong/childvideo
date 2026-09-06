@@ -62,7 +62,11 @@ export function CategoryTile({
 }) {
   const bg = TINTS[tint] ?? tint
   return (
-    <button onClick={onClick} className="press flex w-[76px] shrink-0 flex-col items-center gap-2">
+    <button
+      onClick={onClick}
+      className="press flex w-[84px] shrink-0 flex-col items-center gap-1.5"
+      title={label}
+    >
       <span
         className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-panel shadow-sm"
         style={{ background: `${bg}1f` }}
@@ -73,7 +77,9 @@ export function CategoryTile({
           <span className="text-3xl">{emoji ?? '🎈'}</span>
         )}
       </span>
-      <span className="text-body2 font-semibold text-lumo-ink/80">{label}</span>
+      <span className="w-full truncate text-center text-body2 font-semibold text-lumo-ink/80">
+        {label}
+      </span>
     </button>
   )
 }
