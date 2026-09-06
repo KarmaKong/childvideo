@@ -15,28 +15,40 @@ export default function TopBar({ name = '宝贝' }: { name?: string }) {
 
   return (
     <>
-      <header className="flex items-center gap-3 px-4 pt-5 pt:px-6 ipad:px-8">
-        <LumoMascot pose="wave" size={48} className="shrink-0 nav:hidden" />
-        <div className="min-w-0 flex-1">
-          <h1 className="truncate text-title-2 text-lumo-ink pt:text-title-1">Hi, {name}! 👋</h1>
-          <p className="mt-0.5 truncate text-body2 text-lumo-ink/50 pt:text-body">
-            一起探索有趣的视频世界吧！
-          </p>
+      <header className="flex items-center justify-between gap-3 px-4 pt:px-6 ipad:px-8 nav:px-8 pt-[max(18px,env(safe-area-inset-top))] nav:min-h-[84px] nav:pt-0">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <LumoMascot pose="wave" size={48} className="shrink-0 nav:hidden" />
+          <div className="min-w-0">
+            <h1 className="truncate text-title-2 text-lumo-ink pt:text-title-1">Hi, {name}! 👋</h1>
+            <p className="mt-0.5 truncate text-body2 text-lumo-ink/50 pt:text-body">
+              今天想看什么？
+            </p>
+          </div>
         </div>
+
         <div className="flex shrink-0 items-center gap-2">
           <IconButton label="搜索" onClick={() => setSearch('')}>
             <SearchIcon className="h-5 w-5" />
           </IconButton>
-          <IconButton label="观看记录" className="hidden pt:flex" onClick={() => nav('/me')}>
+          <IconButton label="观看记录" onClick={() => nav('/me')}>
             <ClockIcon className="h-5 w-5" />
           </IconButton>
+
+          {/* 竖屏：紧凑图标按钮 */}
+          <IconButton
+            label="家长中心"
+            className="nav:hidden !bg-lumo-yellow/90 !text-lumo-ink"
+            onClick={() => setGate(true)}
+          >
+            <HeartFill className="h-5 w-5 text-lumo-coral" />
+          </IconButton>
+          {/* 横屏：黄色胶囊 */}
           <button
             onClick={() => setGate(true)}
-            aria-label="家长中心"
-            className="press flex h-12 shrink-0 items-center gap-1.5 rounded-pill bg-lumo-yellow px-3.5 text-body2 font-bold text-lumo-ink shadow-sm pt:px-4"
+            className="press hidden h-12 shrink-0 items-center gap-1.5 rounded-pill bg-lumo-yellow px-4 text-body2 font-bold text-lumo-ink shadow-sm nav:flex"
           >
             <HeartFill className="h-4 w-4 text-lumo-coral" />
-            <span className="hidden min-[380px]:inline">家长中心</span>
+            家长中心
           </button>
         </div>
       </header>

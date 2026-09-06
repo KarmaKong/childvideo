@@ -12,6 +12,7 @@ body,
 
 body {
   margin: 0;
+  overflow-x: hidden;
   background: theme('colors.lumo.page');
   color: theme('colors.lumo.ink');
   font-family: theme('fontFamily.sans');

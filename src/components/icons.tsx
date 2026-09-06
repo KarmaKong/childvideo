@@ -29,6 +29,12 @@ import {
   Gauge,
   Timer,
   Captions,
+  Music2,
+  Languages,
+  FlaskConical,
+  BookOpen,
+  Puzzle,
+  AudioLines,
   type LucideIcon,
   type LucideProps,
 } from 'lucide-react'
@@ -75,3 +81,11 @@ export const EpisodesIcon = mk(ListVideo)
 export const SpeedIcon = mk(Gauge)
 export const TimerIcon = mk(Timer)
 export const SubtitleIcon = mk(Captions)
+
+// 内容分区图标（逐步替代 emoji）
+export const SongsIcon = mk(Music2)
+export const EnglishIcon = mk(Languages)
+export const ScienceIcon = mk(FlaskConical)
+export const StoryIcon = mk(BookOpen)
+export const PuzzleIcon = mk(Puzzle)
+export const MusicIcon = mk(AudioLines)

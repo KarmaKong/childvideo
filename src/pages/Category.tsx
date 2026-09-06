@@ -5,6 +5,7 @@ import { VideoGrid, LoadingState, EmptyState, CategoryChip } from '../components
 import { ChevLeft, FilterIcon } from '../components/icons'
 import { isCategoryAllowed, useSettingsStore } from '../store/useSettingsStore'
 import { useProgressStore } from '../store/useProgressStore'
+import { TAXONOMY, videosInTax } from '../lib/taxonomy'
 import type { Video } from '../types'
 
 type Sort = 'all' | 'new' | 'progress'
@@ -25,6 +26,7 @@ export default function CategoryPage() {
 
   const isAll = categoryId === 'all'
   const isFav = categoryId === 'fav'
+  const taxKey = categoryId.startsWith('tax-') ? categoryId.slice(4) : ''
 
   const base = useMemo<Video[]>(() => {
     if (!catalog) return []
@@ -34,14 +36,21 @@ export default function CategoryPage() {
     const byId = new Map(catalog.videos.map((v) => [v.id, v]))
     if (isFav) return favorites.map((id) => byId.get(id)).filter((v): v is Video => !!v && visible(v))
     if (isAll) return catalog.videos.filter(visible)
+    if (taxKey) return videosInTax(catalog, taxKey, catalog.videos.filter(visible))
     return catalog.videos.filter((v) => v.category === categoryId && visible(v))
-  }, [catalog, categoryId, isAll, isFav, favorites, settings])
+  }, [catalog, categoryId, isAll, isFav, taxKey, favorites, settings])
 
   if (!catalog) return <LoadingState />
 
-  const cat = !isAll && !isFav ? catalog.categories.find((c) => c.id === categoryId) : undefined
-  const title = isAll ? '全部影片' : isFav ? '我的收藏' : (cat?.name ?? '分类')
-  const allowed = isAll || isFav || isCategoryAllowed(settings, categoryId)
+  const cat = !isAll && !isFav && !taxKey ? catalog.categories.find((c) => c.id === categoryId) : undefined
+  const title = isAll
+    ? '全部影片'
+    : isFav
+      ? '我的收藏'
+      : taxKey
+        ? (TAXONOMY.find((t) => t.key === taxKey)?.label ?? '分类')
+        : (cat?.name ?? '分类')
+  const allowed = isAll || isFav || !!taxKey || isCategoryAllowed(settings, categoryId)
 
   let vids = base
   if (sort === 'new') vids = [...base].sort((a, b) => (a.id < b.id ? 1 : -1))

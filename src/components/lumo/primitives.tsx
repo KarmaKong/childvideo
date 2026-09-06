@@ -65,20 +65,20 @@ export function CategoryTile({
   return (
     <button
       onClick={onClick}
-      className="press flex w-[84px] shrink-0 flex-col items-center gap-1.5"
+      className="press flex w-[88px] shrink-0 flex-col items-center gap-2"
       title={label}
     >
       <span
-        className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-panel shadow-sm"
+        className="flex h-[68px] w-[68px] items-center justify-center overflow-hidden rounded-panel shadow-sm"
         style={{ background: `${bg}1f` }}
       >
         {illust ? (
-          <img src={illust} alt="" aria-hidden className="h-[52px] w-[52px] object-contain" />
+          <img src={illust} alt="" aria-hidden className="h-[54px] w-[54px] object-contain" />
         ) : (
-          <span className="text-3xl">{emoji ?? '🎈'}</span>
+          <span className="text-[32px] leading-none">{emoji ?? '🎈'}</span>
         )}
       </span>
-      <span className="w-full truncate text-center text-body2 font-semibold text-lumo-ink/80">
+      <span className="w-full whitespace-nowrap text-center text-body2 font-semibold text-lumo-ink/80">
         {label}
       </span>
     </button>

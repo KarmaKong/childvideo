@@ -10,7 +10,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-lumo-page">
       <div className="mx-auto flex max-w-[1440px]">
         <SideNavigation />
-        <main className="min-w-0 flex-1 pb-[calc(72px+env(safe-area-inset-bottom))] nav:pb-12">
+        <main className="min-w-0 flex-1 pb-[calc(80px+env(safe-area-inset-bottom))] nav:pb-12">
           <div className="mx-auto w-full max-w-[1600px]">{children}</div>
         </main>
       </div>

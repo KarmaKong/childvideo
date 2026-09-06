@@ -1,43 +1,64 @@
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCatalog } from '../lib/catalog'
 import { sourceMode } from '../lib/source'
+import { TAXONOMY, videosInTax } from '../lib/taxonomy'
 import TopBar from '../components/TopBar'
 import {
   SectionHeader,
   CategoryTile,
-  VideoRow,
+  SectionGrid,
+  RecommendedCarousel,
   ContinueWatchingHero,
   LoadingState,
   EmptyState,
 } from '../components/lumo'
-import { SparkIcon, ClockIcon } from '../components/icons'
+import {
+  SparkIcon,
+  ClockIcon,
+  SongsIcon,
+  CartoonIcon,
+  EnglishIcon,
+  ScienceIcon,
+  StoryIcon,
+  PuzzleIcon,
+  MusicIcon,
+} from '../components/icons'
 import { isCategoryAllowed, useSettingsStore } from '../store/useSettingsStore'
 import { useProgressStore } from '../store/useProgressStore'
-import type { Video, Category } from '../types'
+import type { Video } from '../types'
 
 const B = import.meta.env.BASE_URL
-const ILLU = `${B}illust/category/`
-const CAT_SVGS = ['cartoons', 'music', 'science', 'stories', 'learn']
-const TINT_CYCLE = ['coral', 'blue', 'purple', 'green', 'yellow', 'purple', 'coral']
-
-// 固定的内容分区（横竖屏共用同一套 IA）
-const NAMED = [
-  { key: 'cartoons', title: '动画', icon: '🎬', re: /cartoon|动画|anim/i },
-  { key: 'music', title: '儿歌', icon: '🎵', re: /nursery|music|儿歌|song|音乐/i },
-  { key: 'english', title: '英语', icon: '📘', re: /english|英语|\babc\b/i },
-  { key: 'science', title: '科普 · 学习', icon: '🧪', re: /science|科普|number|math|learn|学习|益智|edu/i },
-] as const
-
-function catSvg(idName: string, i: number): string {
-  const k = idName.toLowerCase()
-  let name = CAT_SVGS[i % CAT_SVGS.length]
-  if (/cartoon|动画|anim/.test(k)) name = 'cartoons'
-  else if (/nursery|music|儿歌|song|音乐/.test(k)) name = 'music'
-  else if (/science|科普|number|math/.test(k)) name = 'science'
-  else if (/story|故事|tale/.test(k)) name = 'stories'
-  else if (/english|英语|learn|学习|益智|edu|abc/.test(k)) name = 'learn'
-  return `${ILLU}category-${name}.svg`
+const SVG_FOR: Record<string, string> = {
+  songs: 'music',
+  cartoon: 'cartoons',
+  english: 'learn',
+  science: 'science',
+  story: 'stories',
+  puzzle: 'learn',
+  music: 'music',
 }
+const ICON_FOR: Record<string, (p: { className?: string }) => JSX.Element> = {
+  songs: (p) => <SongsIcon {...p} />,
+  cartoon: (p) => <CartoonIcon {...p} />,
+  english: (p) => <EnglishIcon {...p} />,
+  science: (p) => <ScienceIcon {...p} />,
+  story: (p) => <StoryIcon {...p} />,
+  puzzle: (p) => <PuzzleIcon {...p} />,
+  music: (p) => <MusicIcon {...p} />,
+}
+const TINT_FOR: Record<string, string> = {
+  songs: 'coral',
+  cartoon: 'blue',
+  english: 'purple',
+  science: 'green',
+  story: 'yellow',
+  puzzle: 'purple',
+  music: 'coral',
+}
+// 首页 section 顺序（优先几个立即渲染，其余延后）
+const PRIORITY = ['songs', 'science']
+const LATER = ['cartoon', 'english', 'story', 'puzzle', 'music']
 
 export default function Home() {
   const nav = useNavigate()
@@ -45,6 +66,12 @@ export default function Home() {
   const settings = useSettingsStore()
   const history = useProgressStore((s) => s.history)
   const progress = useProgressStore((s) => s.progress)
+  const [showLater, setShowLater] = useState(false)
+
+  useEffect(() => {
+    const id = window.setTimeout(() => setShowLater(true), 80)
+    return () => window.clearTimeout(id)
+  }, [])
 
   if (error)
     return (
@@ -80,20 +107,24 @@ export default function Home() {
     .filter((v, i, a) => a.findIndex((x) => x.id === v.id) === i)
     .slice(0, 12)
 
-  const cats = catalog.categories.filter(
-    (c) => isCategoryAllowed(settings, c.id) && all.some((v) => v.category === c.id),
-  )
-  const vidsOf = (c: Category) => all.filter((v) => v.category === c.id)
-
-  // 命名分区 + 未归类分区
-  const used = new Set<string>()
-  const namedSections = NAMED.map((n) => {
-    const match = cats.filter((c) => n.re.test(`${c.id} ${c.name}`))
-    match.forEach((c) => used.add(c.id))
-    const vids = match.flatMap(vidsOf)
-    return { ...n, vids, only: match.length === 1 ? match[0] : null }
-  }).filter((s) => s.vids.length > 0)
-  const leftover = cats.filter((c) => !used.has(c.id))
+  const taxVids = new Map(TAXONOMY.map((t) => [t.key, videosInTax(catalog, t.key, all)]))
+  const section = (key: string) => {
+    const vids = taxVids.get(key) ?? []
+    if (vids.length === 0) return null
+    const t = TAXONOMY.find((x) => x.key === key)!
+    const Icon = ICON_FOR[key]
+    return (
+      <section key={key}>
+        <SectionHeader
+          title={t.label}
+          icon={<Icon className="h-5 w-5 text-lumo-blue" />}
+          onMore={() => nav(`/c/tax-${key}`)}
+          className="mb-3"
+        />
+        <SectionGrid videos={vids} />
+      </section>
+    )
+  }
 
   if (all.length === 0)
     return (
@@ -109,11 +140,9 @@ export default function Home() {
     <div className="flex flex-col gap-6 pb-6 nav:gap-8">
       <TopBar />
 
-      <div className="flex flex-col gap-6 px-4 pt:px-6 ipad:px-8 nav:gap-8">
-        {/* 1. Continue Watching */}
+      <div className="flex flex-col gap-8 px-4 pt:px-6 ipad:px-8 nav:px-8">
         {hero && <ContinueWatchingHero video={hero} />}
 
-        {/* 2. Recommended */}
         <section>
           <SectionHeader
             title="为你推荐"
@@ -121,60 +150,29 @@ export default function Home() {
             onMore={() => nav('/discover')}
             className="mb-3"
           />
-          <VideoRow videos={recommend} />
+          <RecommendedCarousel videos={recommend} />
         </section>
 
-        {/* 3. Popular Categories —— 水平单行 */}
-        {cats.length > 0 && (
-          <section>
-            <SectionHeader
-              title="热门分类"
-              icon={<SparkIcon className="h-5 w-5 text-lumo-yellow" />}
-              className="mb-3"
-            />
-            <div className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <CategoryTile label="全部" emoji="🗂️" tint="blue" onClick={() => nav('/discover')} />
-              {cats.map((c, i) => (
-                <CategoryTile
-                  key={c.id}
-                  label={c.name}
-                  illust={catSvg(`${c.id} ${c.name}`, i)}
-                  tint={TINT_CYCLE[i % TINT_CYCLE.length]}
-                  onClick={() => nav(`/c/${c.id}`)}
-                />
-              ))}
-            </div>
-          </section>
-        )}
+        <section>
+          <SectionHeader title="热门分类" icon={<SparkIcon className="h-5 w-5 text-lumo-yellow" />} className="mb-3" />
+          <div className="flex gap-2 overflow-x-auto pb-1 pt:flex-wrap pt:overflow-visible nav:flex-nowrap nav:overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <CategoryTile label="全部" emoji="🗂️" tint="blue" onClick={() => nav('/discover')} />
+            {TAXONOMY.map((t) => (
+              <CategoryTile
+                key={t.key}
+                label={t.label}
+                illust={`${B}illust/category/category-${SVG_FOR[t.key]}.svg`}
+                tint={TINT_FOR[t.key]}
+                onClick={() => nav(`/c/tax-${t.key}`)}
+              />
+            ))}
+          </div>
+        </section>
 
-        {/* 4–7. 命名内容分区 */}
-        {namedSections.map((s) => (
-          <section key={s.key}>
-            <SectionHeader
-              title={s.title}
-              icon={<span className="text-xl leading-none">{s.icon}</span>}
-              onMore={() => nav(s.only ? `/c/${s.only.id}` : '/discover')}
-              className="mb-3"
-            />
-            <VideoRow videos={s.vids} />
-          </section>
-        ))}
+        {PRIORITY.map(section)}
+        {showLater && LATER.map(section)}
 
-        {/* 未归类的其它分类，各自独立分区 */}
-        {leftover.map((c) => (
-          <section key={c.id}>
-            <SectionHeader
-              title={c.name}
-              icon={<span className="text-xl leading-none">{c.icon}</span>}
-              onMore={() => nav(`/c/${c.id}`)}
-              className="mb-3"
-            />
-            <VideoRow videos={vidsOf(c)} />
-          </section>
-        ))}
-
-        {/* 8. Recently Watched */}
-        {recent.length > 0 && (
+        {recent.length > 0 && showLater && (
           <section>
             <SectionHeader
               title="最近看过"
@@ -182,7 +180,7 @@ export default function Home() {
               onMore={() => nav('/me')}
               className="mb-3"
             />
-            <VideoRow videos={recent} />
+            <SectionGrid videos={recent} />
           </section>
         )}
       </div>

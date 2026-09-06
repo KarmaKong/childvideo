@@ -12,4 +12,10 @@ export {
   SearchBar,
 } from './primitives'
 export { LoadingState, EmptyState, Modal } from './Feedback'
-export { VideoCard, VideoGrid, VideoRow, ContinueWatchingHero } from './VideoCard'
+export {
+  VideoCard,
+  VideoGrid,
+  SectionGrid,
+  RecommendedCarousel,
+  ContinueWatchingHero,
+} from './VideoCard'
